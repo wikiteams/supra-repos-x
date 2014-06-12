@@ -1,0 +1,21 @@
+Usage exaple:
+with resume mechanism
+There is an option to resume from a given repository, which is helpful due the GitHub API quota limits. Just give in arguments a repo and name (comma seperated) - it must exists in CSV input. Program will take care of job progress.
+nohup python intelliGit.py -v --utf8=true --resume=name,owner --resumestage=contributors --entity=nick &
+without resume mechanism (start from scratch)
+nohup python intelliGit.py &
+Configuration files
+pass.txt (not provided)
+File which holds authentication credentials to GitHub API.
+format:
+login or token
+pass
+oath_id
+oath_secret
+mail_pass.txt (not provided)
+Holds authentication to SMTP server. Program reports to email about quota use.
+format:
+login
+pass
+logging.conf
+You can use the one provided in our repo. Holds configuration for logging mechanism.
