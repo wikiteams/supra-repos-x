@@ -35,7 +35,7 @@ use_utf8 = True
 resume_on_repo = None
 resume_stage = None
 resume_entity = None
-#quota_check = 0
+no_of_threads = 20
 github_clients = list()
 github_client = None
 
@@ -47,8 +47,8 @@ def usage():
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:v", ["help", "tokens=",
-                               "utf8=", "resume=", "resumestage=", "entity=", "verbose"])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:", ["help", "tokens=",
+                               "utf8=", "resume=", "resumestage=", "entity=", "verbose", "threads="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -72,6 +72,9 @@ for o, a in opts:
     elif o in ("-s", "--resumestage"):
         resume_stage = a
         scream.ssay('Resume on repo with stage ' + str(resume_stage))
+    elif o in ("-x", "--threads"):
+        no_of_threads = a
+        scream.ssay('Number of threads to engage ' + str(no_of_threads))
     elif o in ("-e", "--entity"):
         resume_entity = a
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
@@ -478,7 +481,7 @@ if __name__ == "__main__":
             print threads[0]
             print type(threads[0])
 
-            while num_working(threads) > 9:
+            while num_working(threads) > no_of_threads:
                 time.sleep(0.2)
 
             #if resume_stage in [None, 'languages']:
