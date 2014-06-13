@@ -258,12 +258,12 @@ class GeneralGetter(threading.Thread):
         self.threadId = threadId
         threading.Thread.__init__(self)
         self.daemon = True
+        self.finished = False
         self.repository = repository
         self.repo = repo
 
     def run(self):
         scream.cout('GeneralGetter starts work...')
-        self.finished = False
         self.get_data()
 
     def is_finished(self):
@@ -273,7 +273,44 @@ class GeneralGetter(threading.Thread):
         self.finished = finished
 
     def get_data(self):
-        print 'get_data for: ' + str(threadId)
+        print 'get_data for: ' + str(self.threadId)
+        if resume_stage in [None, 'contributors']:
+            try:
+                scream.ssay('Checking size of a team')
+                '1. Rozmiar zespolu'
+                contributors = repository.get_contributors()
+                check_quota_limit()
+                repo_contributors = []
+                try:
+                    for contributor in contributors:
+                        repo_contributors.append(contributor)
+                        check_quota_limit()
+                        developer_revealed(repository, repo, contributor, result_writer)
+                except TypeError:
+                    repos_reported_execution_error.write(key + os.linesep)
+                except socket.timeout:
+                    repos_reported_execution_error.write(key + os.linesep)
+                except:
+                    repos_reported_execution_error.write(key + os.linesep)
+                repo.setContributors(repo_contributors)
+                #repo.setContributorsCount(len(repo_contributors))
+                'class fields are not garbage, '
+                'its better to calculate count on demand'
+                scream.log('Added contributors of count: ' +
+                           str(len(repo_contributors)) +
+                           ' to a repo ' + key)
+            except GithubException as e:
+                if 'repo_contributors' not in locals():
+                    repo.setContributors([])
+                else:
+                    repo.setContributors(repo_contributors)
+                scream.log_error('Repo didnt gave any contributors, ' +
+                                 'or paginated through' +
+                                 ' contributors gave error. ' + key +
+                                 ', error({0}): {1}'.
+                                 format(e.status, e.data))
+            finally:
+                resume_stage = None
 
 
 def all_finished(threads):
@@ -421,44 +458,6 @@ if __name__ == "__main__":
             iteration_step_count += 1
             scream.ssay('Step no ' + str(iteration_step_count) +
                         '. Working on a repo: ' + key)
-
-            if resume_stage in [None, 'contributors']:
-                try:
-                    scream.ssay('Checking size of a team')
-                    '1. Rozmiar zespolu'
-                    contributors = repository.get_contributors()
-                    check_quota_limit()
-                    repo_contributors = []
-                    try:
-                        for contributor in contributors:
-                            repo_contributors.append(contributor)
-                            check_quota_limit()
-                            developer_revealed(repository, repo, contributor, result_writer)
-                    except TypeError:
-                        repos_reported_execution_error.write(key + os.linesep)
-                    except socket.timeout:
-                        repos_reported_execution_error.write(key + os.linesep)
-                    except:
-                        repos_reported_execution_error.write(key + os.linesep)
-                    repo.setContributors(repo_contributors)
-                    #repo.setContributorsCount(len(repo_contributors))
-                    'class fields are not garbage, '
-                    'its better to calculate count on demand'
-                    scream.log('Added contributors of count: ' +
-                               str(len(repo_contributors)) +
-                               ' to a repo ' + key)
-                except GithubException as e:
-                    if 'repo_contributors' not in locals():
-                        repo.setContributors([])
-                    else:
-                        repo.setContributors(repo_contributors)
-                    scream.log_error('Repo didnt gave any contributors, ' +
-                                     'or paginated through' +
-                                     ' contributors gave error. ' + key +
-                                     ', error({0}): {1}'.
-                                     format(e.status, e.data))
-                finally:
-                    resume_stage = None
 
             #if resume_stage in [None, 'languages']:
             #    scream.ssay('Getting languages of a repo')
