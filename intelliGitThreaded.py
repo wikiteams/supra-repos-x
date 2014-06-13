@@ -273,7 +273,7 @@ class GeneralGetter(threading.Thread):
         self.finished = finished
 
     def get_data(self):
-        print 'get_data for: ' + str(self.threadId)
+        scream.say('get_data for: ' + str(self.threadId))
         if resume_stage in [None, 'contributors']:
             try:
                 scream.ssay('Checking size of a team')
@@ -371,8 +371,8 @@ if __name__ == "__main__":
             github_clients.append(local_gh)
             scream.say(local_gh.rate_limiting)
 
-    print('How many Github objects in github_clients: ' + str(len(github_clients)))
-    print('Assigning current github client to the first object in a list')
+    scream.cout('How many Github objects in github_clients: ' + str(len(github_clients)))
+    scream.cout('Assigning current github client to the first object in a list')
     github_client = github_clients[0]
     is_gc_turned_on = 'turned on' if str(gc.isenabled()) else 'turned off'
     scream.ssay('Garbage collector is ' + is_gc_turned_on)
