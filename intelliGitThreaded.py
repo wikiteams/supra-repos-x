@@ -28,6 +28,7 @@ import cStringIO
 import __builtin__
 import socket
 import time
+import threading
 
 auth_with_tokens = True
 use_utf8 = True
@@ -248,6 +249,49 @@ def make_headers(filename_for_headers):
         devs_head_writer.writerow(tempv)
 
 
+class GeneralGetter(threading.Thread):
+    finished = None
+    repository = None
+    repo = None
+
+    def __init__(self, threadId, repository, repo):
+        self.threadId = threadId
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self.repository = repository
+        self.repo = repo
+
+    def run(self):
+        scream.cout('GeneralGetter starts work...')
+        self.finished = False
+        self.get_data()
+
+    def is_finished(self):
+        return self.finished
+
+    def set_finished(self, finished):
+        self.finished = finished
+
+    def get_data(self):
+        print 'get_data for: ' + str(threadId)
+
+
+def all_finished(threads):
+    are_finished = True
+    for thread in threads:
+        if not thread.is_finished():
+            return False
+    return are_finished
+
+
+def num_finished(threads):
+    are_finished = 0
+    for thread in threads:
+        if thread.is_finished():
+            are_finished += 1
+    return are_finished
+
+
 if __name__ == "__main__":
     '''
     Starts process of work on CSV files which are output of Google Bigquery
@@ -257,6 +301,8 @@ if __name__ == "__main__":
     scream.say('Start main execution')
     scream.say('Welcome to WikiTeams.pl GitHub repo analyzer!')
     scream.say(version_name)
+
+    threads = []
 
     secrets = []
     credential_list = []
@@ -294,9 +340,6 @@ if __name__ == "__main__":
     is_gc_turned_on = 'turned on' if str(gc.isenabled()) else 'turned off'
     scream.ssay('Garbage collector is ' + is_gc_turned_on)
 
-    #TO DO: do it as a last item, it is less important
-    #make_headers()
-
     scream.say('WORKING WITH INPUT FILE : ' + input_filename)  # simply 'result_stargazers_2013_final_mature.csv'
     scream.say('This can take a while, max aprox. 2 minutes...')
     filename_ = 'data/' if sys.platform == 'linux2' else 'data\\'
@@ -330,7 +373,7 @@ if __name__ == "__main__":
     scream.say('Finished creating queue, size of fifo construct is: ' +
                str(repos.qsize()))
 
-    iteration_step_count = 0
+    iteration_step_count = 1
 
     if not os.path.isfile('developers_revealed_from_top.csv'):
         make_headers('developers_revealed_from_top.csv')
@@ -345,7 +388,8 @@ if __name__ == "__main__":
             if resume_on_repo is not None:
                 resume_on_repo_name = resume_on_repo.split(',')[0]
                 resume_on_repo_owner = resume_on_repo.split(',')[1]
-
+                # here basicly we pass already processed repos
+                # hence the continue directive till resume_on_repo pass
                 if not ((resume_on_repo_name == repo.getName()) and
                         (resume_on_repo_owner == repo.getOwner())):
                     iteration_step_count += 1
@@ -358,6 +402,9 @@ if __name__ == "__main__":
             try:
                 repository = github_client.get_repo(repo.getKey())
                 repo.setRepoObject(repository)
+                # from this line move everything to a thread!
+                gg = GeneralGetter(iteration_step_count, repository, repo)
+                threads.append(gg.start())
             except UnknownObjectException as e:
                 scream.log_warning('Repo with key + ' + key +
                                    ' not found, error({0}): {1}'.
