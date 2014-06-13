@@ -474,9 +474,9 @@ if __name__ == "__main__":
     if reverse_queue:
         aux_stack = Stack()
         while not repos.empty():
-            aux_stack.push(repos.dequeue())
+            aux_stack.push(repos.get())
         while not aux_stack.isEmpty():
-            repos.enqueue(aux_stack.pop())
+            repos.put(aux_stack.pop())
 
     with open('developers_revealed_from_top.csv', 'ab') as result_file:
         threads = []
@@ -522,9 +522,9 @@ if __name__ == "__main__":
                                    format(e.status, e.data), True)
                 repos_reported_nonexist.write(key + os.linesep)
                 continue
-            except:
+            except Exception as e:
                 scream.log_warning('Repo with key + ' + key +
-                                   ' not found, error({0}): {1}'.
+                                   ' made other error ({0}): {1}'.
                                    format(e.status, e.data), True)
                 repos_reported_nonexist.write(key + os.linesep)
                 continue
