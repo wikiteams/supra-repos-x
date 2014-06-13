@@ -187,8 +187,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
     scream.say(following)
     scream.say(followers)
 
+    # Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
-    #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     total_his_repositories = 0
     total_his_stars = 0
     total_his_watchers = 0
@@ -202,15 +202,16 @@ def developer_revealed(repository, repo, contributor, result_writer):
         total_his_stars += his_repo.stargazers_count
         total_his_watchers += his_repo.watchers_count
         total_network_count += his_repo.network_count
-    #4
-    # as far as i know - almost impossible to get
-    # 5
-    # blazej task, not mine
-    # 6
+        #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+        #4 Ilosc team memberow, ktorzy sa w projektach przez niego utworzonych [TeamAddEvent] [MemberEvent]
+    #5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     collaborators = contributor.collaborators
+    # firma developera
     company = contributor.company
+    #6 Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     contributions = contributor.contributions
     created_at = contributor.created_at
+    # Czy chce byc zatrudniony
     hireable = contributor.hireable
     result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), login,
                            (name if name is not None else ''), str(followers), str(following),
