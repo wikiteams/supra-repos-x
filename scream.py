@@ -32,18 +32,24 @@ def ssay(s):
         logger.info(str(s))
 
 
-def log_error(s):
+def log_error(s, cmd):
     if intelliTag_verbose:
+        if cmd:
+            print str(s)
         logger.error(s)
 
 
-def log_warning(s):
+def log_warning(s, cmd):
     if intelliTag_verbose:
+        if cmd:
+            print str(s)
         logger.warning(s)
 
 
-def log_debug(s):
+def log_debug(s, cmd):
     if intelliTag_verbose:
+        if cmd:
+            print str(s)
         logger.debug(s)
 
 
