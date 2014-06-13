@@ -223,7 +223,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
     created_at = contributor.created_at
     # Czy chce byc zatrudniony
     hireable = contributor.hireable
-    result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), login,
+    result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), repo.getStargazersCount(), login,
                            (name if name is not None else ''), str(followers), str(following),
                            str(collaborators), (company if company is not None else ''), str(contributions),
                            str(created_at), (str(hireable) if hireable is not None else ''),
@@ -261,7 +261,7 @@ def freeze():
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'dev_login', 'dev_name',
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'dev_login', 'dev_name',
                  'followers', 'following', 'collaborators', 'company', 'contributions', 'created_at', 'hireable',
                  'total_his_repositories', 'total_his_stars', 'total_his_watchers', 'total_his_forks', 'total_his_has_issues',
                  'total_his_has_wiki', 'total_his_open_issues', 'total_network_count')
@@ -462,8 +462,10 @@ if __name__ == "__main__":
                     continue
 
             try:
+                check_quota_limit()
                 repository = github_client.get_repo(repo.getKey())
                 repo.setRepoObject(repository)
+                repo.setStargazersCount(repository.stargazers_count)
                 # from this line move everything to a thread!
                 scream.say('Create instance of GeneralGetter')
                 gg = GeneralGetter(iteration_step_count, repository, repo)
