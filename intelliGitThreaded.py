@@ -473,7 +473,7 @@ if __name__ == "__main__":
 
     if reverse_queue:
         aux_stack = Stack()
-        while not repos.isEmpty():
+        while not repos.empty():
             aux_stack.push(repos.dequeue())
         while not aux_stack.isEmpty():
             repos.enqueue(aux_stack.pop())
