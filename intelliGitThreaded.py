@@ -193,7 +193,12 @@ def developer_revealed(repository, repo, contributor, result_writer):
     total_his_stars = 0
     total_his_watchers = 0
     total_his_forks = 0
+    total_his_has_issues = 0
+    total_his_has_wiki = 0
+    total_his_open_issues = 0
     total_network_count = 0
+    total_his_collaborators = 0
+    total_his_contributors = 0
     for his_repo in his_repositories:
         # his_repo.get_stats_contributors()
         check_quota_limit()
@@ -201,9 +206,14 @@ def developer_revealed(repository, repo, contributor, result_writer):
         total_his_forks += his_repo.forks_count
         total_his_stars += his_repo.stargazers_count
         total_his_watchers += his_repo.watchers_count
+        total_his_has_issues += 1 if his_repo.has_issues else 0
+        total_his_has_wiki += 1 if his_repo.has_wiki else 0
+        total_his_open_issues += his_repo.open_issues
         total_network_count += his_repo.network_count
         #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
         #4 Ilosc team memberow, ktorzy sa w projektach przez niego utworzonych [TeamAddEvent] [MemberEvent]
+        total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
     #5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     collaborators = contributor.collaborators
     # firma developera
@@ -216,8 +226,10 @@ def developer_revealed(repository, repo, contributor, result_writer):
     result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), login,
                            (name if name is not None else ''), str(followers), str(following),
                            str(collaborators), (company if company is not None else ''), str(contributions),
-                           str(created_at), (str(hireable) if hireable is not None else ''), str(total_his_repositories), str(total_his_stars),
-                           str(total_his_watchers), str(total_his_forks), str(total_network_count)])
+                           str(created_at), (str(hireable) if hireable is not None else ''),
+                           str(total_his_repositories), str(total_his_stars),
+                           str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
+                           str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
 
 
 def check_quota_limit():
@@ -251,7 +263,8 @@ def make_headers(filename_for_headers):
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
         tempv = ('repo_url', 'repo_name', 'repo_owner', 'dev_login', 'dev_name',
                  'followers', 'following', 'collaborators', 'company', 'contributions', 'created_at', 'hireable',
-                 'total_his_repositories', 'total_his_stars', 'total_his_watchers', 'total_his_forks', 'total_network_count')
+                 'total_his_repositories', 'total_his_stars', 'total_his_watchers', 'total_his_forks', 'total_his_has_issues',
+                 'total_his_has_wiki', 'total_his_open_issues', 'total_network_count')
         devs_head_writer.writerow(tempv)
 
 
