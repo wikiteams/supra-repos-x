@@ -253,16 +253,15 @@ class GeneralGetter(threading.Thread):
     finished = None
     repository = None
     repo = None
-    resume_stage = None
 
-    def __init__(self, threadId, repository, repo, resume_stage):
+    def __init__(self, threadId, repository, repo):
         self.threadId = threadId
         threading.Thread.__init__(self)
         self.daemon = True
         self.finished = False
         self.repository = repository
         self.repo = repo
-        self.resume_stage = resume_stage
+        #self.resume_stage = resume_stage
 
     def run(self):
         scream.cout('GeneralGetter starts work...')
@@ -275,6 +274,7 @@ class GeneralGetter(threading.Thread):
         self.finished = finished
 
     def get_data(self):
+        global resume_stage
         scream.say('get_data for: ' + str(self.threadId))
         if resume_stage in [None, 'contributors']:
             try:
@@ -323,12 +323,12 @@ def all_finished(threads):
     return are_finished
 
 
-def num_finished(threads):
-    are_finished = 0
+def num_working(threads):
+    are_working = 0
     for thread in threads:
-        if thread.is_finished():
-            are_finished += 1
-    return are_finished
+        if not thread.is_finished():
+            are_working += 1
+    return are_working
 
 
 if __name__ == "__main__":
@@ -442,7 +442,8 @@ if __name__ == "__main__":
                 repository = github_client.get_repo(repo.getKey())
                 repo.setRepoObject(repository)
                 # from this line move everything to a thread!
-                gg = GeneralGetter(iteration_step_count, repository, repo, resume_stage)
+                gg = GeneralGetter(iteration_step_count, repository, repo)
+                #gg = GeneralGetter(iteration_step_count, repository, repo, resume_stage)
                 threads.append(gg.start())
             except UnknownObjectException as e:
                 scream.log_warning('Repo with key + ' + key +
@@ -461,7 +462,7 @@ if __name__ == "__main__":
             scream.ssay('Step no ' + str(iteration_step_count) +
                         '. Ordered working on a repo: ' + key)
 
-            while num_finished(threads) > 10:
+            while num_working(threads) > 9:
                 time.sleep(0.2)
 
             #if resume_stage in [None, 'languages']:
