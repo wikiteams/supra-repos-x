@@ -30,6 +30,7 @@ import socket
 import time
 import threading
 
+
 auth_with_tokens = True
 use_utf8 = True
 resume_on_repo = None
@@ -38,6 +39,7 @@ resume_entity = None
 no_of_threads = 20
 github_clients = list()
 github_client = None
+reverse_queue = False
 
 
 def usage():
@@ -47,8 +49,8 @@ def usage():
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:", ["help", "tokens=",
-                               "utf8=", "resume=", "resumestage=", "entity=", "verbose", "threads="])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:q", ["help", "tokens=",
+                               "utf8=", "resume=", "resumestage=", "entity=", "verbose", "threads=", "reverse"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -78,6 +80,9 @@ for o, a in opts:
     elif o in ("-e", "--entity"):
         resume_entity = a
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
+    elif o in ("-q", "--reverse"):
+        reverse_queue = (a not in ['false', 'False'])
+        scream.ssay('Queue will be reversed, program will start from end ' + str(reverse_queue))
 
 repos = Queue()
 
@@ -90,6 +95,20 @@ take around 32k biggest GitHub repositories
 input_filename = 'result_stargazers_2013_final_mature.csv'
 repos_reported_nonexist = open('reported_nonexist_fifo.csv', 'ab')
 repos_reported_execution_error = open('reported_execution_error_fifo.csv', 'ab')
+
+
+class Stack:
+    def __init__(self):
+        self.__storage = []
+
+    def isEmpty(self):
+        return len(self.__storage) == 0
+
+    def push(self, p):
+        self.__storage.append(p)
+
+    def pop(self):
+        return self.__storage.pop()
 
 
 class WriterDialect(csv.Dialect):
@@ -437,6 +456,13 @@ if __name__ == "__main__":
 
     if not os.path.isfile('developers_revealed_from_top.csv'):
         make_headers('developers_revealed_from_top.csv')
+
+    if reverse_queue:
+        aux_stack = Stack()
+        while not repos.isEmpty():
+            aux_stack.push(repos.dequeue())
+        while not aux_stack.isEmpty():
+            repos.enqueue(aux_stack.pop())
 
     with open('developers_revealed_from_top.csv', 'ab') as result_file:
         threads = []
