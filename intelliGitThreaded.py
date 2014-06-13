@@ -65,8 +65,8 @@ for o, a in opts:
         auth_with_tokens = (a in ['true', 'True'])
     elif o in ("-u", "--utf8"):
         use_utf8 = (a not in ['false', 'False'])
-    elif o in ("-r", "--resume"):
-        resume_on_repo = a
+    elif o in ("-r", "--resume"):  # if running after a long pause, consider starting from new
+        resume_on_repo = a  # remember dataset is a static one point in time
         scream.ssay('Resume on repo? ' + str(resume_on_repo))
     elif o in ("-s", "--resumestage"):
         resume_stage = a
@@ -260,6 +260,7 @@ if __name__ == "__main__":
 
     secrets = []
     credential_list = []
+    # reading the secrets, the Github factory objects will be created in next paragraph
     with open('pass.txt', 'r') as passfile:
         line__id = 0
         for line in passfile:
@@ -275,6 +276,7 @@ if __name__ == "__main__":
 
     scream.say(str(len(credential_list)) + ' full credentials successfully loaded')
 
+    # with the credential_list list we create a list of Github objects, github_clients holds ready Github objects
     for credential in credential_list:
         if auth_with_tokens:
             local_gh = Github(login_or_token=credential['pass'], client_id=credential['client_id'], client_secret=credential['client_secret'], user_agent=credential['login'])
@@ -286,7 +288,8 @@ if __name__ == "__main__":
             github_clients.append(local_gh)
             scream.say(local_gh.rate_limiting)
 
-    #print(len(github_clients))
+    print('How many Github objects in github_clients: ' + str(len(github_clients)))
+    print('Assigning current github client to the first object in a list')
     github_client = github_clients[0]
     is_gc_turned_on = 'turned on' if str(gc.isenabled()) else 'turned off'
     scream.ssay('Garbage collector is ' + is_gc_turned_on)
@@ -294,10 +297,10 @@ if __name__ == "__main__":
     #TO DO: do it as a last item, it is less important
     #make_headers()
 
-    scream.say('WORKING WITH INPUT FILE : ' + input_filename)
+    scream.say('WORKING WITH INPUT FILE : ' + input_filename)  # simply 'result_stargazers_2013_final_mature.csv'
     scream.say('This can take a while, max aprox. 2 minutes...')
     filename_ = 'data/' if sys.platform == 'linux2' else 'data\\'
-    filename__ = filename_ + input_filename
+    filename__ = filename_ + input_filename  # remember it is in a /data subdir
     with open(filename__, 'rb') as source_csvfile:
         reposReader = UnicodeReader(f=source_csvfile, dialect=RepoReaderDialect)
         reposReader.next()
@@ -338,6 +341,7 @@ if __name__ == "__main__":
             repo = repos.get()
             key = repo.getKey()
 
+            # resume on repo is implemented, just provide parameters in argvs
             if resume_on_repo is not None:
                 resume_on_repo_name = resume_on_repo.split(',')[0]
                 resume_on_repo_owner = resume_on_repo.split(',')[1]
