@@ -457,7 +457,10 @@ if __name__ == "__main__":
 
             iteration_step_count += 1
             scream.ssay('Step no ' + str(iteration_step_count) +
-                        '. Working on a repo: ' + key)
+                        '. Ordered working on a repo: ' + key)
+
+            while num_finished() > 10:
+                time.sleep(0.2)
 
             #if resume_stage in [None, 'languages']:
             #    scream.ssay('Getting languages of a repo')
