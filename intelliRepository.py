@@ -39,7 +39,7 @@ class MyRepository():
     repository_pulls = None
     repository_pushed_at = None
     repository_size = None
-    repository_stargazers = None
+    repository_stargazers_count = None
     repository_subscribers = None
     repository_watchers = None
     repository_url = None
@@ -131,14 +131,11 @@ class MyRepository():
     def getSubscribersCount(self):
         return (len(self.repository_subscribers) if self.repository_subscribers is not None else 0)
 
-    def setStargazers(self, stargazers):
-        self.repository_stargazers = stargazers
-
-    def getStargazers(self):
-        return self.repository_stargazers
+    def setStargazersCount(self, stargazers_count):
+        self.repository_stargazers_count = stargazers_count
 
     def getStargazersCount(self):
-        return (len(self.repository_stargazers) if self.repository_stargazers is not None else 0)
+        return self.repository_stargazers_count
 
     def setLanguage(self, languages):
         self.repository_language = languages
