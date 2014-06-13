@@ -253,14 +253,16 @@ class GeneralGetter(threading.Thread):
     finished = None
     repository = None
     repo = None
+    resume_stage = None
 
-    def __init__(self, threadId, repository, repo):
+    def __init__(self, threadId, repository, repo, resume_stage):
         self.threadId = threadId
         threading.Thread.__init__(self)
         self.daemon = True
         self.finished = False
         self.repository = repository
         self.repo = repo
+        self.resume_stage = resume_stage
 
     def run(self):
         scream.cout('GeneralGetter starts work...')
@@ -440,7 +442,7 @@ if __name__ == "__main__":
                 repository = github_client.get_repo(repo.getKey())
                 repo.setRepoObject(repository)
                 # from this line move everything to a thread!
-                gg = GeneralGetter(iteration_step_count, repository, repo)
+                gg = GeneralGetter(iteration_step_count, repository, repo, resume_stage)
                 threads.append(gg.start())
             except UnknownObjectException as e:
                 scream.log_warning('Repo with key + ' + key +
@@ -459,7 +461,7 @@ if __name__ == "__main__":
             scream.ssay('Step no ' + str(iteration_step_count) +
                         '. Ordered working on a repo: ' + key)
 
-            while num_finished() > 10:
+            while num_finished(threads) > 10:
                 time.sleep(0.2)
 
             #if resume_stage in [None, 'languages']:
