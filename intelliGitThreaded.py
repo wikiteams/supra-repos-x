@@ -179,14 +179,16 @@ def developer_revealed(repository, repo, contributor, result_writer):
     scream.say('assigning a contributor: ' + str(contributor) + ' to a repo: ' + str(repository) + ' and mock object ' + str(repo))
     login = contributor.login
     name = contributor.name
-    #1
+    #1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     followers = contributor.followers
-    #2
+    #2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
     following = contributor.following
+
     scream.say(following)
     scream.say(followers)
+
     his_repositories = contributor.get_repos()
-    #3
+    #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     total_his_repositories = 0
     total_his_stars = 0
     total_his_watchers = 0
