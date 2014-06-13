@@ -250,7 +250,7 @@ def make_headers(filename_for_headers):
 
 
 class GeneralGetter(threading.Thread):
-    finished = None
+    finished = False
     repository = None
     repo = None
 
@@ -265,10 +265,11 @@ class GeneralGetter(threading.Thread):
 
     def run(self):
         scream.cout('GeneralGetter starts work...')
+        self.finished = False
         self.get_data()
 
     def is_finished(self):
-        return self.finished
+        return self.finished if self.finished is not None else False  # i dont know why there are none types :/
 
     def set_finished(self, finished):
         self.finished = finished
@@ -310,9 +311,11 @@ class GeneralGetter(threading.Thread):
                                  'or paginated through' +
                                  ' contributors gave error. ' + key +
                                  ', error({0}): {1}'.
-                                 format(e.status, e.data))
+                                 format(e.status, e.data), True)
             finally:
                 resume_stage = None
+
+        self.finished = True
 
 
 def all_finished(threads):
@@ -341,9 +344,8 @@ if __name__ == "__main__":
     scream.say('Welcome to WikiTeams.pl GitHub repo analyzer!')
     scream.say(version_name)
 
-    threads = []
-
     secrets = []
+
     credential_list = []
     # reading the secrets, the Github factory objects will be created in next paragraph
     with open('pass.txt', 'r') as passfile:
@@ -418,6 +420,8 @@ if __name__ == "__main__":
         make_headers('developers_revealed_from_top.csv')
 
     with open('developers_revealed_from_top.csv', 'ab') as result_file:
+        threads = []
+
         result_writer = UnicodeWriter(result_file)
         while not repos.empty():
             repo = repos.get()
@@ -442,25 +446,37 @@ if __name__ == "__main__":
                 repository = github_client.get_repo(repo.getKey())
                 repo.setRepoObject(repository)
                 # from this line move everything to a thread!
+                scream.say('Create instance of GeneralGetter')
                 gg = GeneralGetter(iteration_step_count, repository, repo)
+                scream.say('Creating GeneralGetter(*) complete')
                 #gg = GeneralGetter(iteration_step_count, repository, repo, resume_stage)
-                threads.append(gg.start())
+                scream.say('Appending thread to collection of threads')
+                threads.append(gg)
+                scream.say('Append complete, threads[] now have size: ' + str(len(threads)))
+                scream.say('Starting thread....')
+                gg.start()
             except UnknownObjectException as e:
                 scream.log_warning('Repo with key + ' + key +
                                    ' not found, error({0}): {1}'.
-                                   format(e.status, e.data))
+                                   format(e.status, e.data), True)
                 repos_reported_nonexist.write(key + os.linesep)
                 continue
             except:
                 scream.log_warning('Repo with key + ' + key +
                                    ' not found, error({0}): {1}'.
-                                   format(e.status, e.data))
+                                   format(e.status, e.data), True)
                 repos_reported_nonexist.write(key + os.linesep)
                 continue
 
             iteration_step_count += 1
             scream.ssay('Step no ' + str(iteration_step_count) +
                         '. Ordered working on a repo: ' + key)
+
+            scream.say('threads[] have size: ' + str(len(threads)))
+            print threads
+            print threads[:]
+            print threads[0]
+            print type(threads[0])
 
             while num_working(threads) > 9:
                 time.sleep(0.2)
