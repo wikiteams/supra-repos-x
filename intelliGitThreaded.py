@@ -41,6 +41,7 @@ github_clients = list()
 github_clients_ids = list()
 github_client = None
 reverse_queue = False
+safe_margin = 70
 
 
 def usage():
@@ -204,8 +205,10 @@ def developer_revealed(repository, repo, contributor, result_writer):
     #2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
     following = contributor.following
 
-    scream.say(following)
-    scream.say(followers)
+    #scream.say(following)
+    #scream.say(followers)
+
+    check_quota_limit()
 
     # Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
@@ -269,10 +272,10 @@ def check_quota_limit():
     global github_client
     limit = github_client.get_rate_limit()
     found_hope = False
-    if limit.rate.remaining < 20:
+    if limit.rate.remaining < safe_margin:
         for quota_hope in github_clients:
             limit_hope = quota_hope.get_rate_limit()
-            if limit_hope.rate.remaining > 19:
+            if limit_hope.rate.remaining > (safe_margin - 1):
                 github_client = quota_hope
                 found_hope = True
                 break
