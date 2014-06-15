@@ -275,13 +275,22 @@ def developer_revealed(repository, repo, contributor, result_writer):
     created_at = contributor.created_at
     # Czy chce byc zatrudniony
     hireable = contributor.hireable
-    result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(login),
-                           (str(name) if name is not None else ''), str(followers), str(following),
-                           str(collaborators), (company if company is not None else ''), str(contributions),
-                           str(created_at), (str(hireable) if hireable is not None else ''),
-                           str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
-                           str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                           str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
+    if not use_utf8:
+        result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()), str(repo.getStargazersCount()), str(login),
+                               (str(name) if name is not None else ''), str(followers), str(following),
+                               str(collaborators), (str(company) if company is not None else ''), str(contributions),
+                               str(created_at), (str(hireable) if hireable is not None else ''),
+                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
+                               str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
+                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
+    else:
+        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), login,
+                               (name if name is not None else ''), str(followers), str(following),
+                               str(collaborators), (company if company is not None else ''), str(contributions),
+                               str(created_at), (str(hireable) if hireable is not None else ''),
+                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
+                               str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
+                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
 
 
 def check_quota_limit():
@@ -653,7 +662,9 @@ if __name__ == "__main__":
             
             try:
                 while True:
+                    scream.say('check_quota_limit() before query..')
                     check_quota_limit()
+                    scream.say('getting repo instance from api result..')
                     repository = github_client.get_repo(repo.getKey())
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
