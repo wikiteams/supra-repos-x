@@ -11,7 +11,7 @@ https://github.com/wikiteams/github-data-tools/tree/master/pandas
 @update 12.06.2014
 '''
 
-version_name = 'Version 2.0 codename: PO(program-oskiego)'
+version_name = 'Version 2.1 codename: PO(program-oskiego)'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -41,7 +41,7 @@ github_clients = list()
 github_clients_ids = list()
 github_client = None
 reverse_queue = False
-safe_margin = 70
+safe_margin = 100
 
 
 def usage():
@@ -197,8 +197,8 @@ class UnicodeWriter:
 
 def developer_revealed(repository, repo, contributor, result_writer):
     #repository = github object, repo = my class object, contributor = nameduser
-    scream.say('assigning a contributor: ' + str(contributor) + ' to a repo: ' + str(repository) + ' and mock object ' + str(repo))
     login = contributor.login
+    scream.say('assigning a contributor: ' + str(login) + ' to a repo: ' + str(repository) + ' and mock object ' + str(repo))
     name = contributor.name
     #1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     followers = contributor.followers
@@ -208,7 +208,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
     #scream.say(following)
     #scream.say(followers)
 
-    check_quota_limit()
+    contributor = check_quota_limit_u(login, contributor)
 
     # Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
@@ -222,9 +222,12 @@ def developer_revealed(repository, repo, contributor, result_writer):
     total_network_count = 0
     total_his_collaborators = 0
     total_his_contributors = 0
-    for his_repo in his_repositories:
+    for __his_repo in his_repositories:
         # his_repo.get_stats_contributors()
-        check_quota_limit()
+
+        his_repo = check_quota_limit_r(__his_repo.owner.login + '/' + __his_repo.name, __his_repo)
+
+        #check_quota_limit()
         total_his_repositories += 1
         total_his_forks += his_repo.forks_count
         total_his_stars += his_repo.stargazers_count
@@ -234,19 +237,32 @@ def developer_revealed(repository, repo, contributor, result_writer):
         total_his_open_issues += his_repo.open_issues
         total_network_count += his_repo.network_count
         #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-        number_of_contributors = 0
-        for temp_object in his_repo.get_contributors():
-            if number_of_contributors % 3 == 0:
-                check_quota_limit()
-            number_of_contributors += 1
+        
+        while True:
+            try:
+                number_of_contributors = his_repo.get_contributors().totalCount
+                break
+            except:
+                his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
+        
+        #for temp_object in his_repo.get_contributors():
+        #    if number_of_contributors % 3 == 0:
+        #        check_quota_limit()
+        #    number_of_contributors += 1
         #total_his_contributors += sum(1 for temp_object in his_repo.get_contributors()) # this had no place for quota check
         total_his_contributors = number_of_contributors
 
-        number_of_collaborators = 0
-        for temp_object in his_repo.get_collaborators():
-            if number_of_contributors % 3 == 0:
-                check_quota_limit()
-            number_of_collaborators += 1
+        while True:
+            try:
+                number_of_collaborators = his_repo.get_collaborators().totalCount
+                break
+            except:
+                his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
+        
+        #for temp_object in his_repo.get_collaborators():
+        #    if number_of_contributors % 3 == 0:
+        #        check_quota_limit()
+        #    number_of_collaborators += 1
         #4 Ilosc team memberow, ktorzy sa w projektach przez niego utworzonych [TeamAddEvent] [MemberEvent]
         total_his_collaborators = number_of_collaborators
         #total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
@@ -273,6 +289,7 @@ def check_quota_limit():
     limit = github_client.get_rate_limit()
     found_hope = False
     if limit.rate.remaining < safe_margin:
+        scream.say('Searching for new quota substitution..')
         for quota_hope in github_clients:
             limit_hope = quota_hope.get_rate_limit()
             if limit_hope.rate.remaining > (safe_margin - 1):
@@ -287,12 +304,58 @@ def check_quota_limit():
         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
 
 
+def check_quota_limit_r(repo_key, repo_in_progress):
+    global github_client
+    limit = github_client.get_rate_limit()
+    found_hope = False
+    if limit.rate.remaining < safe_margin:
+        scream.say('Searching for new quota substitution..')
+        for quota_hope in github_clients:
+            limit_hope = quota_hope.get_rate_limit()
+            if limit_hope.rate.remaining > (safe_margin - 1):
+                github_client = quota_hope
+                found_hope = True
+                break
+        if not found_hope:
+            freeze()
+        scream.say('Returning turbo-charged Repository.py instance..')
+        return github_client.get_repo(repo_key)
+    else:
+        slots_left = github_client.rate_limiting
+        client__id__ = github_clients_ids[github_clients.index(github_client)]
+        scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
+        return repo_in_progress
+
+
+def check_quota_limit_u(contributor_key, contributor):
+    global github_client
+    limit = github_client.get_rate_limit()
+    found_hope = False
+    if limit.rate.remaining < safe_margin:
+        scream.say('Searching for new quota substitution..')
+        for quota_hope in github_clients:
+            limit_hope = quota_hope.get_rate_limit()
+            if limit_hope.rate.remaining > (safe_margin - 1):
+                github_client = quota_hope
+                found_hope = True
+                break
+        if not found_hope:
+            freeze()
+        scream.say('Returning turbo-charged User.py instance..')
+        return github_client.get_user(contributor_key)
+    else:
+        slots_left = github_client.rate_limiting
+        client__id__ = github_clients_ids[github_clients.index(github_client)]
+        scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
+        return contributor
+
+
 def freeze():
     global github_client
     sleepy_head_time = 60 * 60
     time.sleep(sleepy_head_time)
     limit = github_client.get_rate_limit()
-    while limit.rate.remaining < 15:
+    while limit.rate.remaining < safe_margin:
         time.sleep(sleepy_head_time)
 
 
@@ -306,6 +369,51 @@ def make_headers(filename_for_headers):
                  'total_his_has_wiki', 'total_his_open_issues', 'total_network_count')
         devs_head_writer.writerow(tempv)
 
+'''
+def build_list_of_programmers(result_set_programmers,
+                              repo_key, repository)
+returns dict (github user name -> User object) 1..1
+key is a string contributor username (login)
+second object is actuall PyGithub User instance, meow !
+'''
+def build_list_of_programmers(result_set_programmers, repo_key, repository):
+    result_set = None
+    contributors__ = result_set_programmers
+    while True:
+        result_set = dict()
+        try:
+            for contributor in contributors__:
+                result_set[contributor.login] = contributor
+                #result_set.update({str(contributor.login): contributor})
+                #result_set.append(contributor)
+                
+                #check_quota_limit()
+                #i don't want to check quota, in case of file i will need to rewrite dict what so ever
+
+                #developer_revealed(repository, repo, contributor, result_writer)
+                #moved further in the code !!!!
+            break  # happenes only when no exceptions around : )
+        except TypeError as e:
+            scream.log_error('Repo + Contributor TypeError, ' +
+                             'or paginated through' +
+                             ' contributors gave error. ' + key +
+                             ', error({0})'.
+                             format(str(e)), True)
+            repos_reported_execution_error.write(key + os.linesep)
+            break
+        except socket.timeout as e:
+            scream.log_error('Timeout while revealing details.. ' +
+                             ', error({0})'.format(str(e)), True)
+            #check_quota_limit()
+            #repos_reported_execution_error.write(key + os.linesep)
+        except Exception as e:
+            scream.log_error('Exception while revealing details.. ' +
+                             ', error({0})'.format(str(e)), True)
+            #check_quota_limit()
+            ___repository = check_quota_limit_r(repo.getKey(), repository)
+            contributors__ = ___repository.get_contributors() # I am sure that repository is turbo charged
+    return result_set
+
 
 class GeneralGetter(threading.Thread):
     finished = False
@@ -314,6 +422,7 @@ class GeneralGetter(threading.Thread):
     result_writer = None
 
     def __init__(self, threadId, repository, repo, result_writer):
+        scream.say('Initiating GeneralGetter, running __init__ procedure.')
         self.threadId = threadId
         threading.Thread.__init__(self)
         self.daemon = True
@@ -331,33 +440,40 @@ class GeneralGetter(threading.Thread):
         return self.finished if self.finished is not None else False  # i dont know why there are none types :/
 
     def set_finished(self, finished):
+        scream.say('Marking the thread ' + str(self.threadId) + ' as finished..')
         self.finished = finished
 
     def get_data(self):
         global resume_stage
-        scream.say('get_data for: ' + str(self.threadId))
+
+        scream.say('get_data() for: ' + str(self.threadId))
         if resume_stage in [None, 'contributors']:
             try:
-                scream.ssay('Checking size of a team')
+                scream.ssay('Checking size of a ' + str(repo.getKey()) + ' team')
                 '1. Rozmiar zespolu'
-                contributors = repository.get_contributors()
-                check_quota_limit()
-                # hmm check if not empty
-                if (contributors is None):
-                    for ii in range[1:3]:
-                        time.sleep(1)
-                        contributors = repository.get_contributors()
-                        if contributors is not None:
-                            break
-                if contributors is None:
-                    scream.log_warning('Repo seems to have 0 contributors! Odd..', True)
-                repo_contributors = []
-                for contributor in contributors:
+                repository = check_quota_limit_r(repo.getKey(), self.repository)
+                contributors = repository.get_contributors() # I am sure that repository is turbo charged
+                # should be never null I am quite sure but yeah Murhpy's applied
+
+                # checking elements will require growing and eating quota, i abondon this idea
+                #if (contributors.total_count < 1):
+                #    for ii in range[1:3]:
+                #        time.sleep(1)
+                #        contributors = repository.get_contributors()
+                #        if contributors.total_count > 0:
+                #            break
+                #if contributors is None:
+                #    scream.log_warning('Repo seems to have 0 contributors! Odd..', True)
+                repo_contributors = list()
+
+                contributors_static = build_list_of_programmers(contributors, repo.getKey(), repository)  # snappy ghuser dict
+                for contributor in contributors_static.items():
                     while True:
                         try:
-                            repo_contributors.append(contributor)
-                            check_quota_limit()
-                            developer_revealed(repository, repo, contributor, result_writer)
+                            #repo_contributors.append(contributor)
+                            contributor___ = check_quota_limit_u(contributor[0], contributor[1])
+                            repo_contributors.append(contributor___)
+                            developer_revealed(repository, repo, contributor___, result_writer)
                             break
                         except TypeError as e:
                             scream.log_error('Repo + Contributor TypeError, ' +
@@ -370,12 +486,12 @@ class GeneralGetter(threading.Thread):
                         except socket.timeout as e:
                             scream.log_error('Timeout while revealing details.. ' +
                                              ', error({0})'.format(str(e)), True)
-                            check_quota_limit()
+                            #check_quota_limit()
                             #repos_reported_execution_error.write(key + os.linesep)
                         except Exception as e:
                             scream.log_error('Exception while revealing details.. ' +
                                              ', error({0})'.format(str(e)), True)
-                            check_quota_limit()
+                            #check_quota_limit()
                             #repos_reported_execution_error.write(key + os.linesep)
                 repo.setContributors(repo_contributors)
                 #repo.setContributorsCount(len(repo_contributors))
@@ -452,7 +568,7 @@ if __name__ == "__main__":
                               client_secret=credential['client_secret'], user_agent=credential['login'],
                               timeout=50)
             github_clients.append(local_gh)
-            github_clients_ids.append(credential['client_id'])
+            github_clients_ids.append(credential['login'])
             #scream.say(local_gh.get_api_status)
             scream.say(local_gh.rate_limiting)
         else:
@@ -578,6 +694,7 @@ if __name__ == "__main__":
             while num_working(threads) > no_of_threads:
                 time.sleep(0.2)
 
+            scream.say('Inviting new thread to the pool...')
             #if resume_stage in [None, 'languages']:
             #    scream.ssay('Getting languages of a repo')
             #    languages = repository.get_languages()  # dict object (json? object)
