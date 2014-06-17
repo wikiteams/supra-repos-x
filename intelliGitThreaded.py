@@ -258,7 +258,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                 while True:
                     try:
                         total_his_contributors = 0
-                        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())  #= his_repo.get_contributors().totalCount
+                        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())  # = his_repo.get_contributors().totalCount
                         break
                     except:
                         his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
@@ -687,7 +687,11 @@ if __name__ == "__main__":
                 else:
                     resume_on_repo = None
                     iteration_step_count += 1
-                    continue
+                    if resume_on_repo_inclusive:
+                        scream.say('Not skipping the ' + resume_on_repo)
+                    else:
+                        scream.say('Starting from the ' + resume_on_repo)
+                        continue
 
             try:
                 while True:
