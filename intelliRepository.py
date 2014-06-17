@@ -17,6 +17,7 @@ class MyRepository():
     repository_branches = None
     repository_commits = None
     repository_contributors = None
+    repository_contributors_count = None
     repository_created_at = None
     repository_description = None
     repository_fork = None
@@ -123,7 +124,10 @@ class MyRepository():
         return self.repository_contributors
 
     def getContributorsCount(self):
-        return (len(self.repository_contributors) if self.repository_contributors is not None else 0)
+        return self.repository_contributors_count
+
+    def setContributorsCount(self, repository_contributors_count):
+        return self.repository_contributors_count
 
     def setSubscribers(self, subscribers):
         self.repository_subscribers = subscribers
