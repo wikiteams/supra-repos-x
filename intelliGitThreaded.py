@@ -8,10 +8,10 @@ https://github.com/wikiteams/github-data-tools/tree/master/pandas
 @since 1.4.0408
 @author Oskar Jarczyk
 
-@update 12.06.2014
+@update 17.06.2014
 '''
 
-version_name = 'Version 2.1 codename: PO(program-oskiego)'
+version_name = 'Version 2.2 codename: JJ'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -33,15 +33,22 @@ import threading
 
 auth_with_tokens = True
 use_utf8 = True
+
 resume_on_repo = None
+resume_on_repo_inclusive = True
+reverse_queue = False
+
 resume_stage = None
 resume_entity = None
+
 no_of_threads = 20
+
 github_clients = list()
 github_clients_ids = list()
 github_client = None
-reverse_queue = False
+
 safe_margin = 100
+timeout = 50
 
 
 def usage():
@@ -73,12 +80,18 @@ for o, a in opts:
     elif o in ("-r", "--resume"):  # if running after a long pause, consider starting from new
         resume_on_repo = a  # remember dataset is a static one point in time
         scream.ssay('Resume on repo? ' + str(resume_on_repo))
+    elif o in ('--resumeinclusive'):
+        resume_on_repo_inclusive = True
+        scream.ssay('Resume on repo with inclusion')
     elif o in ("-s", "--resumestage"):
         resume_stage = a
         scream.ssay('Resume on repo with stage ' + str(resume_stage))
     elif o in ("-x", "--threads"):
         no_of_threads = a
         scream.ssay('Number of threads to engage ' + str(no_of_threads))
+    elif o in ("-z", "--timeout"):
+        timeout = a
+        scream.ssay('Connection timeout ' + str(timeout))
     elif o in ("-e", "--entity"):
         resume_entity = a
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
@@ -411,10 +424,8 @@ def build_list_of_programmers(result_set_programmers, repo_key, repository):
                 result_set[contributor.login] = contributor
                 #result_set.update({str(contributor.login): contributor})
                 #result_set.append(contributor)
-                
                 #check_quota_limit()
                 #i don't want to check quota, in case of file i will need to rewrite dict what so ever
-
                 #developer_revealed(repository, repo, contributor, result_writer)
                 #moved further in the code !!!!
             break  # happenes only when no exceptions around : )
@@ -591,7 +602,7 @@ if __name__ == "__main__":
         if auth_with_tokens:
             local_gh = Github(login_or_token=credential['pass'], client_id=credential['client_id'],
                               client_secret=credential['client_secret'], user_agent=credential['login'],
-                              timeout=50)
+                              timeout=timeout)
             github_clients.append(local_gh)
             github_clients_ids.append(credential['login'])
             #scream.say(local_gh.get_api_status)
@@ -604,6 +615,9 @@ if __name__ == "__main__":
     scream.cout('How many Github objects in github_clients: ' + str(len(github_clients)))
     scream.cout('Assigning current github client to the first object in a list')
     github_client = github_clients[0]
+    lapis = local_gh.get_api_status()
+    scream.say('Current status of GitHub API...: ' + lapis.status + ' (last update: ' + str(lapis.last_updated) + ')')
+
     is_gc_turned_on = 'turned on' if str(gc.isenabled()) else 'turned off'
     scream.ssay('Garbage collector is ' + is_gc_turned_on)
 
