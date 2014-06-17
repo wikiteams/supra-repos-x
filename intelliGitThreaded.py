@@ -31,7 +31,7 @@ import time
 import threading
 
 
-count___ = True
+count___ = 'selenium'
 
 auth_with_tokens = True
 use_utf8 = True
@@ -259,7 +259,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                 total_his_open_issues += his_repo.open_issues
                 total_network_count += his_repo.network_count
 
-                if count___:
+                if count___ == 'api':
 
                     # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
                     total_his_contributors = None
@@ -284,6 +284,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
                         except:
                             freeze('Exception in getting total_his_collaborators')
                     assert total_his_collaborators is not None
+                elif count___ == 'selenium':
+
                 else:
                     while True:
                         try:
