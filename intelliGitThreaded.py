@@ -212,60 +212,75 @@ def developer_revealed(repository, repo, contributor, result_writer):
 
     # Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
-    total_his_repositories = 0
-    total_his_stars = 0
-    total_his_watchers = 0
-    total_his_forks = 0
-    total_his_has_issues = 0
-    total_his_has_wiki = 0
-    total_his_open_issues = 0
-    total_network_count = 0
-    total_his_collaborators = 0
-    total_his_contributors = 0
-    for __his_repo in his_repositories:
-        # his_repo.get_stats_contributors()
 
-        his_repo = check_quota_limit_r(__his_repo.owner.login + '/' + __his_repo.name, __his_repo)
+    while True:
+        total_his_repositories = 0
+        total_his_stars = 0
+        total_his_watchers = 0
+        total_his_forks = 0
+        total_his_has_issues = 0
+        total_his_has_wiki = 0
+        total_his_open_issues = 0
+        total_network_count = 0
+        total_his_collaborators = 0
+        total_his_contributors = 0
+        try:
+            for __his_repo in his_repositories:
+                # his_repo.get_stats_contributors()
 
-        #check_quota_limit()
-        total_his_repositories += 1
-        total_his_forks += his_repo.forks_count
-        total_his_stars += his_repo.stargazers_count
-        total_his_watchers += his_repo.watchers_count
-        total_his_has_issues += 1 if his_repo.has_issues else 0
-        total_his_has_wiki += 1 if his_repo.has_wiki else 0
-        total_his_open_issues += his_repo.open_issues
-        total_network_count += his_repo.network_count
-        #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-        
-        while True:
-            try:
-                number_of_contributors = his_repo.get_contributors().totalCount
-                break
-            except:
-                his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
-        
-        #for temp_object in his_repo.get_contributors():
-        #    if number_of_contributors % 3 == 0:
-        #        check_quota_limit()
-        #    number_of_contributors += 1
-        #total_his_contributors += sum(1 for temp_object in his_repo.get_contributors()) # this had no place for quota check
-        total_his_contributors = number_of_contributors
+                his_repo = check_quota_limit_r(__his_repo.owner.login + '/' + __his_repo.name, __his_repo)
 
-        while True:
-            try:
-                number_of_collaborators = his_repo.get_collaborators().totalCount
-                break
-            except:
-                his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
-        
-        #for temp_object in his_repo.get_collaborators():
-        #    if number_of_contributors % 3 == 0:
-        #        check_quota_limit()
-        #    number_of_collaborators += 1
-        #4 Ilosc team memberow, ktorzy sa w projektach przez niego utworzonych [TeamAddEvent] [MemberEvent]
-        total_his_collaborators = number_of_collaborators
-        #total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
+                #check_quota_limit()
+                total_his_repositories += 1
+                total_his_forks += his_repo.forks_count
+                total_his_stars += his_repo.stargazers_count
+                total_his_watchers += his_repo.watchers_count
+                total_his_has_issues += 1 if his_repo.has_issues else 0
+                total_his_has_wiki += 1 if his_repo.has_wiki else 0
+                total_his_open_issues += his_repo.open_issues
+                total_network_count += his_repo.network_count
+                #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+
+                total_his_contributors = None
+                while True:
+                    try:
+                        total_his_contributors = 0
+                        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())  #= his_repo.get_contributors().totalCount
+                        break
+                    except:
+                        his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
+                assert total_his_contributors is not None
+
+                #for temp_object in his_repo.get_contributors():
+                #    if number_of_contributors % 3 == 0:
+                #        check_quota_limit()
+                #    number_of_contributors += 1
+                #total_his_contributors += sum(1 for temp_object in his_repo.get_contributors()) # this had no place for quota check
+                #total_his_contributors = number_of_contributors
+
+                total_his_collaborators = None
+                while True:
+                    try:
+                        total_his_collaborators = 0
+                        total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())  # his_repo.get_collaborators().totalCount
+                        break
+                    except:
+                        his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
+                assert total_his_collaborators is not None
+
+                #for temp_object in his_repo.get_collaborators():
+                #    if number_of_contributors % 3 == 0:
+                #        check_quota_limit()
+                #    number_of_collaborators += 1
+                #4 Ilosc team memberow, ktorzy sa w projektach przez niego utworzonych [TeamAddEvent] [MemberEvent]
+                # total_his_collaborators = number_of_collaborators
+                # total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
+            break
+        except:
+            contributor = check_quota_limit_u(login, contributor)
+            # Ilosc projektow przez niego utworzonych
+            his_repositories = contributor.get_repos()
+
     #5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     collaborators = contributor.collaborators
     # firma developera
@@ -378,6 +393,7 @@ def make_headers(filename_for_headers):
                  'total_his_has_wiki', 'total_his_open_issues', 'total_network_count')
         devs_head_writer.writerow(tempv)
 
+
 '''
 def build_list_of_programmers(result_set_programmers,
                               repo_key, repository)
@@ -420,7 +436,7 @@ def build_list_of_programmers(result_set_programmers, repo_key, repository):
                              ', error({0})'.format(str(e)), True)
             #check_quota_limit()
             ___repository = check_quota_limit_r(repo.getKey(), repository)
-            contributors__ = ___repository.get_contributors() # I am sure that repository is turbo charged
+            contributors__ = ___repository.get_contributors()  # I am sure that repository is turbo charged
     return result_set
 
 
@@ -646,8 +662,8 @@ if __name__ == "__main__":
 
             # resume on repo is implemented, just provide parameters in argvs
             if resume_on_repo is not None:
-                resume_on_repo_name = resume_on_repo.split(',')[0]
-                resume_on_repo_owner = resume_on_repo.split(',')[1]
+                resume_on_repo_owner = resume_on_repo.split('/')[0]
+                resume_on_repo_name = resume_on_repo.split('/')[1]
                 # here basicly we pass already processed repos
                 # hence the continue directive till resume_on_repo pass
                 if not ((resume_on_repo_name == repo.getName()) and
@@ -659,7 +675,6 @@ if __name__ == "__main__":
                     iteration_step_count += 1
                     continue
 
-            
             try:
                 while True:
                     scream.say('check_quota_limit() before query..')
@@ -668,6 +683,7 @@ if __name__ == "__main__":
                     repository = github_client.get_repo(repo.getKey())
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
+                    assert repo.getStargazersCount() is not None
                     # from this line move everything to a thread!
                     scream.say('Create instance of GeneralGetter')
                     gg = GeneralGetter(iteration_step_count, repository, repo, result_writer)
@@ -688,9 +704,10 @@ if __name__ == "__main__":
             except Exception as e:
                 scream.log_warning('Repo with key + ' + key +
                                    ' made other error ({0})'.
-                                   format(e), True)
-                repos_reported_nonexist.write(key + os.linesep)
-                continue
+                                   format(e.decode('utf-8')), True)
+                repos_reported_execution_error.write(key + os.linesep)
+                scream.say('Trying again with repo ' + str(key))
+                #continue
 
             iteration_step_count += 1
             scream.ssay('Step no ' + str(iteration_step_count) +
