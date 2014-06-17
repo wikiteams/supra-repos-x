@@ -49,6 +49,7 @@ github_clients_ids = list()
 
 safe_margin = 100
 timeout = 50
+sleepy_head_time = 25
 
 
 def usage():
@@ -58,9 +59,9 @@ def usage():
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:z:qim:", ["help", "tokens=",
+    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:z:qim:j:", ["help", "tokens=",
                                "utf8=", "resume=", "resumestage=", "entity=", "verbose",
-                               "threads=", "timeout=", "reverse", "intelli", "safemargin="])
+                               "threads=", "timeout=", "reverse", "intelli", "safemargin=", "sleep="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -96,6 +97,9 @@ for o, a in opts:
     elif o in ("-m", "--safemargin"):
         safemargin = int(float(a))
         scream.ssay('Connection timeout ' + str(timeout))
+    elif o in ("-j", "--sleep"):
+        sleepy_head_time = int(float(a))
+        scream.ssay('Retry time: ' + str(sleepy_head_time))
     elif o in ("-i", "--intelli"):
         intelli_no_of_threads = True
         scream.ssay('Matching thread numbers to credential? ' + str(intelli_no_of_threads))
@@ -221,7 +225,7 @@ repository = github object, repo = my class object, contributor = nameduser
 '''
 def developer_revealed(repository, repo, contributor, result_writer):
     login = contributor.login
-    scream.say('Assigning a contributor: ' + str(login) + ' to a repo: ' + str(repository) + ' and mock object ' + str(repo))
+    scream.say('Assigning a contributor: ' + str(login) + ' to a repo: ' + str(repository.name))
     name = contributor.name
     # 1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     followers = contributor.followers
@@ -261,7 +265,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                         total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())  # = his_repo.get_contributors().totalCount
                         break
                     except:
-                        freeze()
+                        freeze('Exception in getting total_his_contributors')
                 assert total_his_contributors is not None
 
                 total_his_collaborators = None
@@ -271,7 +275,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                         total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())  # his_repo.get_collaborators().totalCount
                         break
                     except:
-                        freeze()
+                        freeze('Exception in getting total_his_collaborators')
                 assert total_his_collaborators is not None
             break
         except:
@@ -306,9 +310,9 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
 
 
-def freeze():
-    sleepy_head_time = 30
-    scream.say('Sleeping for ' + str(sleepy_head_time) + ' seconds.')
+def freeze(message):
+    global sleepy_head_time
+    scream.say('Sleeping for ' + str(sleepy_head_time) + ' seconds. Reason: ' + str(message))
     time.sleep(sleepy_head_time)
 
 
@@ -415,11 +419,11 @@ class GeneralGetter(threading.Thread):
                     except socket.timeout as e:
                         scream.log_error('Timeout while revealing details.. ' +
                                          ', error({0})'.format(str(e)), True)
-                        freeze()
+                        freeze('socket.timeout in paginate through x contributors')
                     except Exception as e:
                         scream.log_error('Exception while revealing details.. ' +
                                          ', error({0})'.format(str(e)), True)
-                        freeze()
+                        freeze(str(e) + ' in paginate through x contributors')
 
             assert repo_contributors is not None
             repo.setContributors(repo_contributors)
@@ -632,7 +636,7 @@ if __name__ == "__main__":
                                    ' made other error ({0})'.
                                    format(str(e).decode('utf-8')), True)
                 repos_reported_execution_error.write(key + os.linesep)
-                freeze()
+                freeze(str(e) + ' in MainClass.get_repo(key)')
                 scream.say('Trying again with repo ' + str(key))
 
             iteration_step_count += 1
