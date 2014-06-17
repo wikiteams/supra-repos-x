@@ -60,7 +60,7 @@ def usage():
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:q", ["help", "tokens=",
-                               "utf8=", "resume=", "resumestage=", "entity=", "verbose", "threads=", "reverse"])
+                               "utf8=", "resume=", "resumestage=", "entity=", "verbose", "threads=", "reverse", "intelli"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -93,7 +93,7 @@ for o, a in opts:
     elif o in ("-z", "--timeout"):
         timeout = a
         scream.ssay('Connection timeout ' + str(timeout))
-    elif o in ("--intelli"):
+    elif o in ("-i", "--intelli"):
         intelli_no_of_threads = True
         scream.ssay('Matching thread numbers to credential? ' + str(intelli_no_of_threads))
     elif o in ("-e", "--entity"):
@@ -222,11 +222,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
     #2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
     following = contributor.following
 
-    #scream.say(following)
-    #scream.say(followers)
-
     contributor = check_quota_limit_u(login, contributor)
-
     # Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
 
@@ -308,7 +304,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
     # Czy chce byc zatrudniony
     hireable = contributor.hireable
     if not use_utf8:
-        result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()), str(repo.getStargazersCount()), str(login),
+        result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()),
+                               str(repo.getStargazersCount()), str(repo.getWatchersCount()), str(login),
                                (str(name) if name is not None else ''), str(followers), str(following),
                                str(collaborators), (str(company) if company is not None else ''), str(contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
@@ -316,7 +313,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
     else:
-        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), login,
+        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), login,
                                (name if name is not None else ''), str(followers), str(following),
                                str(collaborators), (company if company is not None else ''), str(contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
@@ -325,85 +322,10 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
 
 
-# def check_quota_limit():
-#     global github_client
-#     limit = github_client.get_rate_limit()
-#     found_hope = False
-#     if limit.rate.remaining < safe_margin:
-#         scream.say('Searching for new quota substitution..')
-#         for quota_hope in github_clients:
-#             limit_hope = quota_hope.get_rate_limit()
-#             if limit_hope.rate.remaining > (safe_margin - 1):
-#                 github_client = quota_hope
-#                 found_hope = True
-#                 break
-#         if not found_hope:
-#             freeze()
-#     else:
-#         slots_left = github_client.rate_limiting
-#         client__id__ = github_clients_ids[github_clients.index(github_client)]
-#         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
-
-
-# def check_quota_limit_r(repo_key, repo_in_progress):
-#     global github_client
-#     limit = github_client.get_rate_limit()
-#     found_hope = False
-#     if limit.rate.remaining < safe_margin:
-#         scream.say('Searching for new quota substitution..')
-#         for quota_hope in github_clients:
-#             limit_hope = quota_hope.get_rate_limit()
-#             if limit_hope.rate.remaining > (safe_margin - 1):
-#                 github_client = quota_hope
-#                 found_hope = True
-#                 break
-#         if not found_hope:
-#             freeze()
-#         scream.say('Returning turbo-charged Repository.py instance..')
-#         return github_client.get_repo(repo_key)
-#     else:
-#         slots_left = github_client.rate_limiting
-#         client__id__ = github_clients_ids[github_clients.index(github_client)]
-#         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
-#         return repo_in_progress
-
-
-# def check_quota_limit_u(contributor_key, contributor):
-#     global github_client
-#     limit = github_client.get_rate_limit()
-#     found_hope = False
-#     if limit.rate.remaining < safe_margin:
-#         scream.say('Searching for new quota substitution..')
-#         for quota_hope in github_clients:
-#             limit_hope = quota_hope.get_rate_limit()
-#             if limit_hope.rate.remaining > (safe_margin - 1):
-#                 github_client = quota_hope
-#                 found_hope = True
-#                 break
-#         if not found_hope:
-#             freeze()
-#         scream.say('Returning turbo-charged User.py instance..')
-#         return github_client.get_user(contributor_key)
-#     else:
-#         slots_left = github_client.rate_limiting
-#         client__id__ = github_clients_ids[github_clients.index(github_client)]
-#         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
-#         return contributor
-
-
-# def freeze():
-#     global github_client
-#     sleepy_head_time = 60 * 60
-#     time.sleep(sleepy_head_time)
-#     limit = github_client.get_rate_limit()
-#     while limit.rate.remaining < safe_margin:
-#         time.sleep(sleepy_head_time)
-
-
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'dev_login', 'dev_name',
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 'dev_login', 'dev_name',
                  'followers', 'following', 'collaborators', 'company', 'contributions', 'created_at', 'hireable',
                  'total_his_repositories', 'total_his_stars', 'total_his_collaborators', 'total_his_contributors',
                  'total_his_watchers', 'total_his_forks', 'total_his_has_issues',
@@ -460,8 +382,9 @@ class GeneralGetter(threading.Thread):
     repository = None
     repo = None
     result_writer = None
+    github_client = None
 
-    def __init__(self, threadId, repository, repo, result_writer):
+    def __init__(self, threadId, repository, repo, result_writer, github_client):
         scream.say('Initiating GeneralGetter, running __init__ procedure.')
         self.threadId = threadId
         threading.Thread.__init__(self)
@@ -470,6 +393,7 @@ class GeneralGetter(threading.Thread):
         self.repository = repository
         self.repo = repo
         self.result_writer = result_writer
+        self.github_client = github_client
 
     def run(self):
         scream.cout('GeneralGetter starts work...')
@@ -711,10 +635,9 @@ if __name__ == "__main__":
 
             try:
                 while True:
-                    #scream.say('check_quota_limit() before query..')
-                    #check_quota_limit()
-                    scream.say('getting repo instance from api result..')
+                    scream.say('Creating Repository.py instance from API result..')
                     current_ghc = github_clients[num_modulo(thread_id_count)]
+                    current_ghc_desc = github_clients_ids[num_modulo(thread_id_count)]
                     repository = current_ghc.get_repo(repo.getKey())
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
@@ -723,13 +646,15 @@ if __name__ == "__main__":
                     assert repo.getWatchersCount() is not None
 
                     # from this line move everything to a thread!
-                    scream.say('Create instance of GeneralGetter')
+                    scream.say('Create instance of GeneralGetter with ID ' + str(thread_id_count) + ' and token ' + str(current_ghc_desc))
                     gg = GeneralGetter(thread_id_count, repository, repo, result_writer, current_ghc)
-                    scream.say('Creating GeneralGetter(*) complete')
+                    scream.say('Creating instance of GeneralGetter complete')
+
                     scream.say('Appending thread to collection of threads')
                     threads.append(gg)
                     scream.say('Append complete, threads[] now have size: ' + str(len(threads)))
                     thread_id_count += 1
+
                     scream.say('Starting thread....')
                     gg.start()
                     break
@@ -761,101 +686,6 @@ if __name__ == "__main__":
                 time.sleep(0.2)
 
             scream.say('Inviting new thread to the pool...')
-            #if resume_stage in [None, 'languages']:
-            #    scream.ssay('Getting languages of a repo')
-            #    languages = repository.get_languages()  # dict object (json? object)
-            #    repo.setLanguage(languages)
-            #    scream.log('Added languages ' + str(languages) + ' to a repo ' + key)
-            #    resume_stage = None
-
-            # to juz mamy
-            # if resume_stage in [None, 'labels']:
-            #     scream.ssay('Getting labels of a repo')
-            #     'getting labels, label is a tag which you can put in an issue'
-            #     try:
-            #         labels = repository.get_labels()  # github.Label object
-            #         repo_labels = []
-            #         for label in labels:
-            #             repo_labels.append(label)
-            #             check_quota_limit()
-            #         repo.setLabels(repo_labels)
-            #         scream.log('Added labels of count: ' + str(len(repo_labels)) +
-            #                    ' to a repo ' + key)
-            #     except GithubException as e:
-            #         if 'repo_labels' not in locals():
-            #             repo.setLabels([])
-            #         else:
-            #             repo.setLabels(repo_labels)
-            #         scream.log_error('Repo didnt gave any labels, ' +
-            #                          'or paginated through' +
-            #                          ' labels gave error. ' +
-            #                          'Issues are disabled for this' +
-            #                          ' repo? + ' + key +
-            #                          ', error({0}): {1}'.
-            #                          format(e.status, e.data))
-            #     finally:
-            #         resume_stage = None
-
-            # nierealne - zabralo by za duzo czasu
-            # if resume_stage in [None, 'commits']:
-            #     scream.ssay('Getting commits of a repo')
-            #     '2. Liczba commit'
-            #     try:
-            #         commits = repository.get_commits()
-            #         repo_commits = []
-            #         for commit in commits:
-            #             repo_commits.append(commit)
-            #             comments = commit.get_comments()
-            #             commit_comments = []
-            #             for comment in comments:
-            #                 commit_comments.append(comment)
-            #                 check_quota_limit()
-            #             statuses = commit.get_statuses()
-            #             commit_statuses = []
-            #             for status in statuses:
-            #                 commit_statuses.append(status)
-            #                 check_quota_limit()
-            #             'IMHO output to CSV already here...'
-            #             output_commit_comments(commit_comments, commit.sha)
-            #             output_commit_statuses(commit_statuses, commit.sha)
-            #             output_commit_stats(commit.stats, commit.sha)
-            #         repo.setCommits(repo_commits)
-            #         scream.log('Added commits of count: ' + str(len(repo_commits)) +
-            #                    ' to a repo ' + key)
-            #     except GithubException as e:
-            #         if 'repo_commits' not in locals():
-            #             repo.setCommits([])
-            #         scream.log_error('Paginating through comments, ' +
-            #                          'comment comments or statuses' +
-            #                          ' gave error. Try again? ' + key +
-            #                          ', error({0}): {1}'.
-            #                          format(e.status, e.data))
-            #     finally:
-            #         resume_stage = None
-
-            # '3. Liczba Commit w poszczegolnych skill (wiele zmiennych)'
-            # 'there is no evidence for existance in GitHub API'
-            # 'of a function for getting skill stats in a commit'
-            # 'TO DO: implement a workaround with BEAUTIFUL SOUP'
-
-            # if resume_stage in [None, 'stargazers']:
-            #     scream.ssay('Getting stargazers of a repo')
-            #     '4. Liczba gwiazdek  (to zostanie uzyte jako jakosc zespolu)'
-            #     stargazers = repository.get_stargazers()
-            #     repo_stargazers = []
-            #     for stargazer in stargazers:
-            #         repo_stargazers.append(stargazer)
-            #         check_quota_limit()
-            #     repo.setStargazers(repo_stargazers)
-            #     scream.log('Added stargazers of count: ' + str(len(repo_stargazers)) +
-            #                ' to a repo ' + key)
-            #     resume_stage = None
-
-            # scream.say('Persisting a repo to CSV output...')
-
-            # 'handle here writing to output, dont make it at end when stack'
-            # 'is full of repos, but do it a repo by repo...'
-            # output_data(repo)
 
             scream.ssay('Finished processing repo: ' + key + '.. moving on... ')
             result_file.flush()
@@ -864,26 +694,3 @@ if __name__ == "__main__":
             'Dictionary cannot change size during iteration'
             'TO DO: associated fields purge so GC will finish the job'
             'implement reset() in intelliRepository.py'
-            #scream.ssay('(' + key + ' deleted)')
-
-            # limit = gh.get_rate_limit()
-
-            # scream.ssay('Rate limit (after whole repo is processed): ' +
-            #             str(limit.rate.limit) +
-            #             ' remaining: ' + str(limit.rate.remaining))
-
-            # reset_time = gh.rate_limiting_resettime
-            # reset_time_human_readable = (datetime.datetime.fromtimestamp(
-            #                              int(reset_time)).strftime(
-            #                              '%Y-%m-%d %H:%M:%S')
-            #                              )
-            # scream.ssay('Rate limit reset time is exactly: ' +
-            #             str(reset_time) + ' which means: ' +
-            #             reset_time_human_readable)
-
-            # if iteration_step_count % 5 == 0:
-            #     intelliNotifications.report_quota(str(limit.rate.limit),
-            #                                       str(limit.rate.remaining))
-
-            # if limit.rate.remaining < 15:
-            #     freeze_more()
