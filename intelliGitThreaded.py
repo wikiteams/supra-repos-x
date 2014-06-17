@@ -31,6 +31,8 @@ import time
 import threading
 
 
+count___ = True
+
 auth_with_tokens = True
 use_utf8 = True
 
@@ -257,28 +259,47 @@ def developer_revealed(repository, repo, contributor, result_writer):
                 total_his_open_issues += his_repo.open_issues
                 total_network_count += his_repo.network_count
 
-                # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-                total_his_contributors = None
-                while True:
-                    try:
-                        total_his_contributors = 0
-                        #total_his_contributors = his_repo.get_contributors().totalCount -- this is buggy and will make errors
-                        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
-                        break
-                    except:
-                        freeze('Exception in getting total_his_contributors')
-                assert total_his_contributors is not None
+                if count___:
 
-                total_his_collaborators = None
-                while True:
-                    try:
-                        total_his_collaborators = 0
-                        #total_his_collaborators = his_repo.get_collaborators().totalCount -- this is buggy and will make errors
-                        total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
-                        break
-                    except:
-                        freeze('Exception in getting total_his_collaborators')
-                assert total_his_collaborators is not None
+                    # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+                    total_his_contributors = None
+                    while True:
+                        try:
+                            total_his_contributors = 0
+                            #total_his_contributors = his_repo.get_contributors().totalCount -- this is buggy and will make errors
+                            total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
+                            break
+                        except:
+                            freeze('Exception in getting total_his_contributors')
+                    assert total_his_contributors is not None
+
+                    # 4 Ilosc kontrybutorow, ktorzy sa w projektach przez niego utworzonych
+                    total_his_collaborators = None
+                    while True:
+                        try:
+                            total_his_collaborators = 0
+                            #total_his_collaborators = his_repo.get_collaborators().totalCount -- this is buggy and will make errors
+                            total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
+                            break
+                        except:
+                            freeze('Exception in getting total_his_collaborators')
+                    assert total_his_collaborators is not None
+                else:
+                    while True:
+                        try:
+                            his_contributors = set()
+                            stats = his_repo.get_stats_contributors()
+                            assert stats is not None
+                            for stat in stats:
+                                if str(stat.author.login).strip() in ['None', '']:
+                                    continue
+                                his_contributors.add(stat.author.login)
+                            total_his_contributors += len(his_contributors)
+                            break
+                        except Exception as exc:
+                            scream.log_warning('Not ready data while revealing details.. ' +
+                                 ', error({0})'.format(str(exc)), True)
+                            freeze('StatsContribution not ready.. waiting for the server to provide good data')
             break
         except Exception as e:
             freeze(str(e) + ' in main loop of developer_revealed()')
