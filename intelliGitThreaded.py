@@ -262,7 +262,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
                 while True:
                     try:
                         total_his_contributors = 0
-                        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())  # = his_repo.get_contributors().totalCount
+                        #total_his_contributors = his_repo.get_contributors().totalCount -- this is buggy and will make errors
+                        total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
                         break
                     except:
                         freeze('Exception in getting total_his_contributors')
@@ -272,14 +273,15 @@ def developer_revealed(repository, repo, contributor, result_writer):
                 while True:
                     try:
                         total_his_collaborators = 0
-                        total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())  # his_repo.get_collaborators().totalCount
+                        #total_his_collaborators = his_repo.get_collaborators().totalCount -- this is buggy and will make errors
+                        total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
                         break
                     except:
                         freeze('Exception in getting total_his_collaborators')
                 assert total_his_collaborators is not None
             break
-        except:
-            freeze()
+        except Exception as e:
+            freeze(str(e) + ' in main loop of developer_revealed()')
             his_repositories = contributor.get_repos()
 
     # 5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
@@ -442,6 +444,7 @@ class GeneralGetter(threading.Thread):
             #     resume_stage = None
 
         self.finished = True
+        self.terminate()
 
 
 def all_finished(threads):
