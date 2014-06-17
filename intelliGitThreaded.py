@@ -46,7 +46,6 @@ intelli_no_of_threads = False
 
 github_clients = list()
 github_clients_ids = list()
-#github_client = None  # such field is useless now for me
 
 safe_margin = 100
 timeout = 50
@@ -211,19 +210,21 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
-
+'''
+developer_revealed(repository, repo, contributor, result_writer)
+return nothing, but writes final result row to a csv file
+repository = github object, repo = my class object, contributor = nameduser
+'''
 def developer_revealed(repository, repo, contributor, result_writer):
-    #repository = github object, repo = my class object, contributor = nameduser
     login = contributor.login
-    scream.say('assigning a contributor: ' + str(login) + ' to a repo: ' + str(repository) + ' and mock object ' + str(repo))
+    scream.say('Assigning a contributor: ' + str(login) + ' to a repo: ' + str(repository) + ' and mock object ' + str(repo))
     name = contributor.name
-    #1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
+    # 1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     followers = contributor.followers
-    #2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
+    # 2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
     following = contributor.following
 
-    contributor = check_quota_limit_u(login, contributor)
-    # Ilosc projektow przez niego utworzonych
+    # - Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
 
     while True:
@@ -238,12 +239,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
         total_his_collaborators = 0
         total_his_contributors = 0
         try:
-            for __his_repo in his_repositories:
-                # his_repo.get_stats_contributors()
-
-                his_repo = check_quota_limit_r(__his_repo.owner.login + '/' + __his_repo.name, __his_repo)
-
-                #check_quota_limit()
+            for his_repo in his_repositories:
                 total_his_repositories += 1
                 total_his_forks += his_repo.forks_count
                 total_his_stars += his_repo.stargazers_count
@@ -252,8 +248,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
                 total_his_has_wiki += 1 if his_repo.has_wiki else 0
                 total_his_open_issues += his_repo.open_issues
                 total_network_count += his_repo.network_count
-                #3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
 
+                # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
                 total_his_contributors = None
                 while True:
                     try:
@@ -261,15 +257,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
                         total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())  # = his_repo.get_contributors().totalCount
                         break
                     except:
-                        his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
+                        freeze()
                 assert total_his_contributors is not None
-
-                #for temp_object in his_repo.get_contributors():
-                #    if number_of_contributors % 3 == 0:
-                #        check_quota_limit()
-                #    number_of_contributors += 1
-                #total_his_contributors += sum(1 for temp_object in his_repo.get_contributors()) # this had no place for quota check
-                #total_his_contributors = number_of_contributors
 
                 total_his_collaborators = None
                 while True:
@@ -278,27 +267,18 @@ def developer_revealed(repository, repo, contributor, result_writer):
                         total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())  # his_repo.get_collaborators().totalCount
                         break
                     except:
-                        his_repo = check_quota_limit_r(his_repo.owner.login + '/' + his_repo.name, his_repo)
+                        freeze()
                 assert total_his_collaborators is not None
-
-                #for temp_object in his_repo.get_collaborators():
-                #    if number_of_contributors % 3 == 0:
-                #        check_quota_limit()
-                #    number_of_collaborators += 1
-                #4 Ilosc team memberow, ktorzy sa w projektach przez niego utworzonych [TeamAddEvent] [MemberEvent]
-                # total_his_collaborators = number_of_collaborators
-                # total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
             break
         except:
-            contributor = check_quota_limit_u(login, contributor)
-            # Ilosc projektow przez niego utworzonych
+            freeze()
             his_repositories = contributor.get_repos()
 
-    #5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
+    # 5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     collaborators = contributor.collaborators
-    # firma developera
+    # - Firma developera
     company = contributor.company
-    #6 Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+    # 6 Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     contributions = contributor.contributions
     created_at = contributor.created_at
     # Czy chce byc zatrudniony
@@ -322,6 +302,12 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
 
 
+def freeze():
+    sleepy_head_time = 30
+    scream.say('Sleeping for ' + str(sleepy_head_time) + ' seconds.')
+    time.sleep(sleepy_head_time)
+
+
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
@@ -343,37 +329,25 @@ second object is actuall PyGithub User instance, meow !
 def build_list_of_programmers(result_set_programmers, repo_key, repository):
     result_set = None
     contributors__ = result_set_programmers
+
     while True:
         result_set = dict()
         try:
             for contributor in contributors__:
                 result_set[contributor.login] = contributor
-                #result_set.update({str(contributor.login): contributor})
-                #result_set.append(contributor)
-                #check_quota_limit()
-                #i don't want to check quota, in case of file i will need to rewrite dict what so ever
-                #developer_revealed(repository, repo, contributor, result_writer)
-                #moved further in the code !!!!
-            break  # happenes only when no exceptions around : )
+            break
         except TypeError as e:
-            scream.log_error('Repo + Contributor TypeError, ' +
-                             'or paginated through' +
-                             ' contributors gave error. ' + key +
-                             ', error({0})'.
+            scream.log_error('Repo + Contributor TypeError, or paginated through' +
+                             ' contributors gave error. ' + key + ', error({0})'.
                              format(str(e)), True)
             repos_reported_execution_error.write(key + os.linesep)
             break
         except socket.timeout as e:
             scream.log_error('Timeout while revealing details.. ' +
                              ', error({0})'.format(str(e)), True)
-            #check_quota_limit()
-            #repos_reported_execution_error.write(key + os.linesep)
         except Exception as e:
             scream.log_error('Exception while revealing details.. ' +
                              ', error({0})'.format(str(e)), True)
-            #check_quota_limit()
-            ___repository = check_quota_limit_r(repo.getKey(), repository)
-            contributors__ = ___repository.get_contributors()  # I am sure that repository is turbo charged
     return result_set
 
 
@@ -401,7 +375,7 @@ class GeneralGetter(threading.Thread):
         self.get_data()
 
     def is_finished(self):
-        return self.finished if self.finished is not None else False  # i dont know why there are none types :/
+        return self.finished if self.finished is not None else False
 
     def set_finished(self, finished):
         scream.say('Marking the thread ' + str(self.threadId) + ' as finished..')
@@ -410,72 +384,54 @@ class GeneralGetter(threading.Thread):
     def get_data(self):
         global resume_stage
 
-        scream.say('get_data() for: ' + str(self.threadId))
+        scream.say('Executing inside-thread method get_data() for: ' + str(self.threadId))
         if resume_stage in [None, 'contributors']:
-            try:
-                scream.ssay('Checking size of a ' + str(repo.getKey()) + ' team')
-                '1. Rozmiar zespolu'
-                repository = check_quota_limit_r(repo.getKey(), self.repository)
-                contributors = repository.get_contributors() # I am sure that repository is turbo charged
-                # should be never null I am quite sure but yeah Murhpy's applied
+            #try:
+            scream.ssay('Checking size of a ' + str(repo.getKey()) + ' team')
+            '1. Team size of a repository'
+            contributors = repository.get_contributors()
+            assert contributors is not None
 
-                # checking elements will require growing and eating quota, i abondon this idea
-                #if (contributors.total_count < 1):
-                #    for ii in range[1:3]:
-                #        time.sleep(1)
-                #        contributors = repository.get_contributors()
-                #        if contributors.total_count > 0:
-                #            break
-                #if contributors is None:
-                #    scream.log_warning('Repo seems to have 0 contributors! Odd..', True)
-                repo_contributors = list()
+            repo_contributors = list()
 
-                contributors_static = build_list_of_programmers(contributors, repo.getKey(), repository)  # snappy ghuser dict
-                for contributor in contributors_static.items():
-                    while True:
-                        try:
-                            #repo_contributors.append(contributor)
-                            contributor___ = check_quota_limit_u(contributor[0], contributor[1])
-                            repo_contributors.append(contributor___)
-                            developer_revealed(repository, repo, contributor___, result_writer)
-                            break
-                        except TypeError as e:
-                            scream.log_error('Repo + Contributor TypeError, ' +
-                                             'or paginated through' +
-                                             ' contributors gave error. ' + key +
-                                             ', error({0})'.
-                                             format(str(e)), True)
-                            repos_reported_execution_error.write(key + os.linesep)
-                            break
-                        except socket.timeout as e:
-                            scream.log_error('Timeout while revealing details.. ' +
-                                             ', error({0})'.format(str(e)), True)
-                            #check_quota_limit()
-                            #repos_reported_execution_error.write(key + os.linesep)
-                        except Exception as e:
-                            scream.log_error('Exception while revealing details.. ' +
-                                             ', error({0})'.format(str(e)), True)
-                            #check_quota_limit()
-                            #repos_reported_execution_error.write(key + os.linesep)
-                repo.setContributors(repo_contributors)
-                #repo.setContributorsCount(len(repo_contributors))
-                'class fields are not garbage, '
-                'its better to calculate count on demand'
-                scream.log('Added contributors of count: ' +
-                           str(len(repo_contributors)) +
-                           ' to a repo ' + key)
-            except GithubException as e:
-                if 'repo_contributors' not in locals():
-                    repo.setContributors([])
-                else:
-                    repo.setContributors(repo_contributors)
-                scream.log_error('Repo didnt gave any contributors, ' +
-                                 'or paginated through' +
-                                 ' contributors gave error. ' + key +
-                                 ', error({0}): {1}'.
-                                 format(e.status, e.data), True)
-            finally:
-                resume_stage = None
+            contributors_static = build_list_of_programmers(contributors, repo.getKey(), repository)
+            for contributor in contributors_static.items():
+                while True:
+                    try:
+                        contributor___ = contributor[1]
+                        repo_contributors.append(contributor___)
+                        developer_revealed(repository, repo, contributor___, result_writer)
+                        break
+                    except TypeError as e:
+                        scream.log_error('Repo + Contributor TypeError, or paginated through' +
+                                         ' contributors gave error. ' + key + ', error({0})'.
+                                         format(str(e)), True)
+                        repos_reported_execution_error.write(key + os.linesep)
+                        break
+                    except socket.timeout as e:
+                        scream.log_error('Timeout while revealing details.. ' +
+                                         ', error({0})'.format(str(e)), True)
+                        freeze()
+                    except Exception as e:
+                        scream.log_error('Exception while revealing details.. ' +
+                                         ', error({0})'.format(str(e)), True)
+                        freeze()
+
+            assert repo_contributors is not None
+            repo.setContributors(repo_contributors)
+            repo.setContributorsCount(len(repo_contributors))
+            scream.log('Added contributors of count: ' + str(len(repo_contributors)) + ' to a repo ' + key)
+            # except GithubException as e:
+            #     if 'repo_contributors' not in locals():
+            #         repo.setContributors([])
+            #     else:
+            #         repo.setContributors(repo_contributors)
+            #     scream.log_error('Repo didnt gave any contributors, or paginated through' +
+            #                      ' contributors gave error. ' + key +
+            #                      ', error({0}): {1}'.
+            #                      format(e.status, e.data), True)
+            # finally:
+            #     resume_stage = None
 
         self.finished = True
 
@@ -669,8 +625,8 @@ if __name__ == "__main__":
                                    ' made other error ({0})'.
                                    format(e.decode('utf-8')), True)
                 repos_reported_execution_error.write(key + os.linesep)
+                freeze()
                 scream.say('Trying again with repo ' + str(key))
-                #continue
 
             iteration_step_count += 1
             scream.ssay('Step no ' + str(iteration_step_count) +
