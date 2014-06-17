@@ -113,6 +113,9 @@ class MyRepository():
     def getWatchersCount(self):
         return self.repository_watchers_count
 
+    def setWatchersCount(self, repository_watchers_count):
+        return self.repository_watchers_count
+
     def setContributors(self, contributors):
         self.repository_contributors = contributors
 

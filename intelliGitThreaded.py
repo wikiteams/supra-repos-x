@@ -42,10 +42,11 @@ resume_stage = None
 resume_entity = None
 
 no_of_threads = 20
+intelli_no_of_threads = False
 
 github_clients = list()
 github_clients_ids = list()
-github_client = None
+#github_client = None  # such field is useless now for me
 
 safe_margin = 100
 timeout = 50
@@ -92,6 +93,9 @@ for o, a in opts:
     elif o in ("-z", "--timeout"):
         timeout = a
         scream.ssay('Connection timeout ' + str(timeout))
+    elif o in ("--intelli"):
+        intelli_no_of_threads = True
+        scream.ssay('Matching thread numbers to credential? ' + str(intelli_no_of_threads))
     elif o in ("-e", "--entity"):
         resume_entity = a
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
@@ -321,79 +325,79 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
 
 
-def check_quota_limit():
-    global github_client
-    limit = github_client.get_rate_limit()
-    found_hope = False
-    if limit.rate.remaining < safe_margin:
-        scream.say('Searching for new quota substitution..')
-        for quota_hope in github_clients:
-            limit_hope = quota_hope.get_rate_limit()
-            if limit_hope.rate.remaining > (safe_margin - 1):
-                github_client = quota_hope
-                found_hope = True
-                break
-        if not found_hope:
-            freeze()
-    else:
-        slots_left = github_client.rate_limiting
-        client__id__ = github_clients_ids[github_clients.index(github_client)]
-        scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
+# def check_quota_limit():
+#     global github_client
+#     limit = github_client.get_rate_limit()
+#     found_hope = False
+#     if limit.rate.remaining < safe_margin:
+#         scream.say('Searching for new quota substitution..')
+#         for quota_hope in github_clients:
+#             limit_hope = quota_hope.get_rate_limit()
+#             if limit_hope.rate.remaining > (safe_margin - 1):
+#                 github_client = quota_hope
+#                 found_hope = True
+#                 break
+#         if not found_hope:
+#             freeze()
+#     else:
+#         slots_left = github_client.rate_limiting
+#         client__id__ = github_clients_ids[github_clients.index(github_client)]
+#         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
 
 
-def check_quota_limit_r(repo_key, repo_in_progress):
-    global github_client
-    limit = github_client.get_rate_limit()
-    found_hope = False
-    if limit.rate.remaining < safe_margin:
-        scream.say('Searching for new quota substitution..')
-        for quota_hope in github_clients:
-            limit_hope = quota_hope.get_rate_limit()
-            if limit_hope.rate.remaining > (safe_margin - 1):
-                github_client = quota_hope
-                found_hope = True
-                break
-        if not found_hope:
-            freeze()
-        scream.say('Returning turbo-charged Repository.py instance..')
-        return github_client.get_repo(repo_key)
-    else:
-        slots_left = github_client.rate_limiting
-        client__id__ = github_clients_ids[github_clients.index(github_client)]
-        scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
-        return repo_in_progress
+# def check_quota_limit_r(repo_key, repo_in_progress):
+#     global github_client
+#     limit = github_client.get_rate_limit()
+#     found_hope = False
+#     if limit.rate.remaining < safe_margin:
+#         scream.say('Searching for new quota substitution..')
+#         for quota_hope in github_clients:
+#             limit_hope = quota_hope.get_rate_limit()
+#             if limit_hope.rate.remaining > (safe_margin - 1):
+#                 github_client = quota_hope
+#                 found_hope = True
+#                 break
+#         if not found_hope:
+#             freeze()
+#         scream.say('Returning turbo-charged Repository.py instance..')
+#         return github_client.get_repo(repo_key)
+#     else:
+#         slots_left = github_client.rate_limiting
+#         client__id__ = github_clients_ids[github_clients.index(github_client)]
+#         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
+#         return repo_in_progress
 
 
-def check_quota_limit_u(contributor_key, contributor):
-    global github_client
-    limit = github_client.get_rate_limit()
-    found_hope = False
-    if limit.rate.remaining < safe_margin:
-        scream.say('Searching for new quota substitution..')
-        for quota_hope in github_clients:
-            limit_hope = quota_hope.get_rate_limit()
-            if limit_hope.rate.remaining > (safe_margin - 1):
-                github_client = quota_hope
-                found_hope = True
-                break
-        if not found_hope:
-            freeze()
-        scream.say('Returning turbo-charged User.py instance..')
-        return github_client.get_user(contributor_key)
-    else:
-        slots_left = github_client.rate_limiting
-        client__id__ = github_clients_ids[github_clients.index(github_client)]
-        scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
-        return contributor
+# def check_quota_limit_u(contributor_key, contributor):
+#     global github_client
+#     limit = github_client.get_rate_limit()
+#     found_hope = False
+#     if limit.rate.remaining < safe_margin:
+#         scream.say('Searching for new quota substitution..')
+#         for quota_hope in github_clients:
+#             limit_hope = quota_hope.get_rate_limit()
+#             if limit_hope.rate.remaining > (safe_margin - 1):
+#                 github_client = quota_hope
+#                 found_hope = True
+#                 break
+#         if not found_hope:
+#             freeze()
+#         scream.say('Returning turbo-charged User.py instance..')
+#         return github_client.get_user(contributor_key)
+#     else:
+#         slots_left = github_client.rate_limiting
+#         client__id__ = github_clients_ids[github_clients.index(github_client)]
+#         scream.say('Limit for ' + str(client__id__) + ' ok, ' + str(slots_left[0]) + ' left from ' + str(slots_left[1]))
+#         return contributor
 
 
-def freeze():
-    global github_client
-    sleepy_head_time = 60 * 60
-    time.sleep(sleepy_head_time)
-    limit = github_client.get_rate_limit()
-    while limit.rate.remaining < safe_margin:
-        time.sleep(sleepy_head_time)
+# def freeze():
+#     global github_client
+#     sleepy_head_time = 60 * 60
+#     time.sleep(sleepy_head_time)
+#     limit = github_client.get_rate_limit()
+#     while limit.rate.remaining < safe_margin:
+#         time.sleep(sleepy_head_time)
 
 
 def make_headers(filename_for_headers):
@@ -568,6 +572,11 @@ def num_working(threads):
     return are_working
 
 
+def num_modulo(thread_id_count__):
+    global no_of_threads
+    return thread_id_count__ % no_of_threads
+
+
 if __name__ == "__main__":
     '''
     Starts process of work on CSV files which are output of Google Bigquery
@@ -614,9 +623,15 @@ if __name__ == "__main__":
 
     scream.cout('How many Github objects in github_clients: ' + str(len(github_clients)))
     scream.cout('Assigning current github client to the first object in a list')
+
     github_client = github_clients[0]
     lapis = local_gh.get_api_status()
     scream.say('Current status of GitHub API...: ' + lapis.status + ' (last update: ' + str(lapis.last_updated) + ')')
+
+    if intelli_no_of_threads:
+        scream.say('Adjusting no of threads to: ' + str(len(github_clients)))
+        no_of_threads = len(github_clients)
+        scream.say('No of threads is currently: ' + str(no_of_threads))
 
     is_gc_turned_on = 'turned on' if str(gc.isenabled()) else 'turned off'
     scream.ssay('Garbage collector is ' + is_gc_turned_on)
@@ -668,6 +683,7 @@ if __name__ == "__main__":
 
     with open('developers_revealed_from_top.csv', 'ab', 0) as result_file:
         threads = []
+        thread_id_count = 0
 
         result_writer = UnicodeWriter(result_file)
         while not repos.empty():
@@ -695,21 +711,25 @@ if __name__ == "__main__":
 
             try:
                 while True:
-                    scream.say('check_quota_limit() before query..')
-                    check_quota_limit()
+                    #scream.say('check_quota_limit() before query..')
+                    #check_quota_limit()
                     scream.say('getting repo instance from api result..')
-                    repository = github_client.get_repo(repo.getKey())
+                    current_ghc = github_clients[num_modulo(thread_id_count)]
+                    repository = current_ghc.get_repo(repo.getKey())
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
                     assert repo.getStargazersCount() is not None
+                    repo.setWatchersCount(repository.watchers_count)
+                    assert repo.getWatchersCount() is not None
+
                     # from this line move everything to a thread!
                     scream.say('Create instance of GeneralGetter')
-                    gg = GeneralGetter(iteration_step_count, repository, repo, result_writer)
+                    gg = GeneralGetter(thread_id_count, repository, repo, result_writer, current_ghc)
                     scream.say('Creating GeneralGetter(*) complete')
-                    #gg = GeneralGetter(iteration_step_count, repository, repo, resume_stage)
                     scream.say('Appending thread to collection of threads')
                     threads.append(gg)
                     scream.say('Append complete, threads[] now have size: ' + str(len(threads)))
+                    thread_id_count += 1
                     scream.say('Starting thread....')
                     gg.start()
                     break
