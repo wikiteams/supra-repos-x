@@ -58,8 +58,9 @@ def usage():
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:q", ["help", "tokens=",
-                               "utf8=", "resume=", "resumestage=", "entity=", "verbose", "threads=", "reverse", "intelli"])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:z:qim:", ["help", "tokens=",
+                               "utf8=", "resume=", "resumestage=", "entity=", "verbose",
+                               "threads=", "timeout=", "reverse", "intelli", "safemargin="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -90,7 +91,10 @@ for o, a in opts:
         no_of_threads = a
         scream.ssay('Number of threads to engage ' + str(no_of_threads))
     elif o in ("-z", "--timeout"):
-        timeout = a
+        timeout = int(float(a))
+        scream.ssay('Connection timeout ' + str(timeout))
+    elif o in ("-m", "--safemargin"):
+        safemargin = int(float(a))
         scream.ssay('Connection timeout ' + str(timeout))
     elif o in ("-i", "--intelli"):
         intelli_no_of_threads = True
@@ -592,13 +596,16 @@ if __name__ == "__main__":
             try:
                 while True:
                     scream.say('Creating Repository.py instance from API result..')
+                    scream.say('Working at the moment on repo: ' + str(repo.getKey()))
                     current_ghc = github_clients[num_modulo(thread_id_count)]
                     current_ghc_desc = github_clients_ids[num_modulo(thread_id_count)]
                     repository = current_ghc.get_repo(repo.getKey())
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
+                    scream.say('There are ' + str(repo.getStargazersCount()) + ' stargazers.')
                     assert repo.getStargazersCount() is not None
-                    repo.setWatchersCount(repository.watchers_count)
+                    repo.setWatchersCount(repository.watchers_count)  # PyGithub must be joking, this works, watchers_count not
+                    scream.say('There are ' + str(repo.getWatchersCount()) + ' watchers.')
                     assert repo.getWatchersCount() is not None
 
                     # from this line move everything to a thread!
@@ -623,7 +630,7 @@ if __name__ == "__main__":
             except Exception as e:
                 scream.log_warning('Repo with key + ' + key +
                                    ' made other error ({0})'.
-                                   format(e.decode('utf-8')), True)
+                                   format(str(e).decode('utf-8')), True)
                 repos_reported_execution_error.write(key + os.linesep)
                 freeze()
                 scream.say('Trying again with repo ' + str(key))
