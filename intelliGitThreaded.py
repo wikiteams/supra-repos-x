@@ -255,6 +255,10 @@ def developer_revealed(repository, repo, contributor, result_writer):
     # 2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
     developer_following = contributor.following
 
+    developer_location = contributor.location
+    developer_total_private_repos = contributor.total_private_repos
+    developer_total_public_repos = contributor.public_repos
+
     # 5.  Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     developer_collaborators = contributor.collaborators
     # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
@@ -347,7 +351,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(created_at), (str(hireable) if hireable is not None else ''),
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
+                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
+                               str(developer_location), str(developer_total_private_repos), str(developer_total_public_repos)])
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -355,7 +360,8 @@ def developer_revealed(repository, repo, contributor, result_writer):
                                str(created_at), (str(hireable) if hireable is not None else ''),
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
+                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
+                               developer_location, str(developer_total_private_repos), str(developer_total_public_repos)])
 
 
 def freeze(message):
