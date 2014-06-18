@@ -54,6 +54,22 @@ timeout = 50
 sleepy_head_time = 25
 
 
+def is_number(s):
+    try:
+        float(s)  # for int, long and float
+    except ValueError:
+        try:
+            complex(s)  # for complex
+        except ValueError:
+            return False
+    return True
+
+
+def analyze_tag(tag):
+    number = filter(lambda x: x.isdigit(), str(tag))
+    return number
+
+
 def usage():
     f = open('usage.txt', 'r')
     for line in f:
