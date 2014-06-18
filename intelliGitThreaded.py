@@ -8,7 +8,7 @@ https://github.com/wikiteams/github-data-tools/tree/master/pandas
 @since 1.4.0408
 @author Oskar Jarczyk
 
-@update 17.06.2014
+@update 18.06.2014
 '''
 
 version_name = 'Version 2.2 codename: JJ'
@@ -25,6 +25,11 @@ import os.path
 import sys
 import codecs
 import cStringIO
+from bs4 import BeautifulSoup
+from lxml import html, etree
+import urllib2
+from pyvirtualdisplay import Display
+from selenium import webdriver
 import __builtin__
 import socket
 import time
@@ -301,7 +306,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                             freeze('Exception in getting total_his_collaborators')
                     assert total_his_collaborators is not None
                 elif count___ == 'selenium':
-
+                    scream.say('Using selenium for thread about  ' + login + ' repositories')
                 else:
                     while True:
                         try:
@@ -406,6 +411,8 @@ class GeneralGetter(threading.Thread):
     repo = None
     result_writer = None
     github_client = None
+    display = None
+    browser = None
 
     def __init__(self, threadId, repository, repo, result_writer, github_client):
         scream.say('Initiating GeneralGetter, running __init__ procedure.')
@@ -421,7 +428,20 @@ class GeneralGetter(threading.Thread):
     def run(self):
         scream.cout('GeneralGetter starts work...')
         self.finished = False
+        # it is quite reasonable to initiate a display driver for selenium
+        # per one getter, threads work on jobs linear so its the max partition of driver
+        # we can allow, multiple threads working on one virtual display - its without sense
+        self.initiate_selenium()
+        # now its ok to start retrieving data.. allonsy !
         self.get_data()
+
+    def initiate_selenium(self):
+        scream.say('Initiating selenium...')
+        display = Display(visible=0, size=(800, 600))
+        display.start()
+        browser = webdriver.Firefox()
+        browser.implicitly_wait(15)
+        scream.say('Selenium ready for action')
 
     def is_finished(self):
         return self.finished if self.finished is not None else False
@@ -470,19 +490,10 @@ class GeneralGetter(threading.Thread):
             repo.setContributors(repo_contributors)
             repo.setContributorsCount(len(repo_contributors))
             scream.log('Added contributors of count: ' + str(len(repo_contributors)) + ' to a repo ' + key)
-            # except GithubException as e:
-            #     if 'repo_contributors' not in locals():
-            #         repo.setContributors([])
-            #     else:
-            #         repo.setContributors(repo_contributors)
-            #     scream.log_error('Repo didnt gave any contributors, or paginated through' +
-            #                      ' contributors gave error. ' + key +
-            #                      ', error({0}): {1}'.
-            #                      format(e.status, e.data), True)
-            # finally:
-            #     resume_stage = None
 
+        scream.say('Marking thread on ' + repo.getKey() + ' as finished..')
         self.finished = True
+        scream.say('Terminating thread on ' + repo.getKey() + ' ...')
         self.terminate()
 
 
