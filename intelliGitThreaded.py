@@ -247,13 +247,18 @@ return nothing, but writes final result row to a csv file
 repository = github object, repo = my class object, contributor = nameduser
 '''
 def developer_revealed(repository, repo, contributor, result_writer):
-    login = contributor.login
-    scream.say('Assigning a contributor: ' + str(login) + ' to a repo: ' + str(repository.name))
-    name = contributor.name
+    developer_login = contributor.login
+    scream.say('Assigning a contributor: ' + str(developer_login) + ' to a repo: ' + str(repository.name))
+    developer_name = contributor.name
     # 1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
-    followers = contributor.followers
+    developer_followers = contributor.followers
     # 2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
-    following = contributor.following
+    developer_following = contributor.following
+
+    # 5.  Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
+    developer_collaborators = contributor.collaborators
+    # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+    developer_contributions = contributor.contributions
 
     # - Ilosc projektow przez niego utworzonych
     his_repositories = contributor.get_repos()
@@ -306,7 +311,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                             freeze('Exception in getting total_his_collaborators')
                     assert total_his_collaborators is not None
                 elif count___ == 'selenium':
-                    scream.say('Using selenium for thread about  ' + login + ' repositories')
+                    scream.say('Using selenium for thread about  ' + developer_login + ' repositories')
                 else:
                     while True:
                         try:
@@ -328,28 +333,25 @@ def developer_revealed(repository, repo, contributor, result_writer):
             freeze(str(e) + ' in main loop of developer_revealed()')
             his_repositories = contributor.get_repos()
 
-    # 5 Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
-    collaborators = contributor.collaborators
-    # - Firma developera
+    # Firma developera
     company = contributor.company
-    # 6 Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-    contributions = contributor.contributions
     created_at = contributor.created_at
-    # Czy chce byc zatrudniony
+    # Czy developer chce byc zatrudniony
     hireable = contributor.hireable
+
     if not use_utf8:
         result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()),
-                               str(repo.getStargazersCount()), str(repo.getWatchersCount()), str(login),
-                               (str(name) if name is not None else ''), str(followers), str(following),
-                               str(collaborators), (str(company) if company is not None else ''), str(contributions),
+                               str(repo.getStargazersCount()), str(repo.getWatchersCount()), str(developer_login),
+                               (str(developer_name) if developer_name is not None else ''), str(developer_followers), str(developer_following),
+                               str(developer_collaborators), (str(company) if company is not None else ''), str(developer_contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count)])
     else:
-        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), login,
-                               (name if name is not None else ''), str(followers), str(following),
-                               str(collaborators), (company if company is not None else ''), str(contributions),
+        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
+                               (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
+                               str(developer_collaborators), (company if company is not None else ''), str(developer_contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
