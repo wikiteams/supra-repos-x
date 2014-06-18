@@ -331,6 +331,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                     total_his_releases += result['releases']
                     total_his_issues += result['issues']
                     total_his_pull_requests += result['pulls']
+                    total_his_contributors += result['contributors']
                 else:
                     while True:
                         try:
@@ -460,14 +461,58 @@ class GeneralGetter(threading.Thread):
 
     def initiate_selenium(self):
         scream.say('Initiating selenium...')
-        display = Display(visible=0, size=(800, 600))
-        display.start()
-        browser = webdriver.Firefox()
-        browser.implicitly_wait(15)
+        self.display = Display(visible=0, size=(800, 600))
+        self.display.start()
+        self.browser = webdriver.Firefox()
+        self.browser.implicitly_wait(15)
         scream.say('Selenium ready for action')
 
     def analyze_with_selenium(self, repository):
+        result = dict()
         scream.say('Starting webinterpret..')
+        assert repository is not None
+        url = repository.url
+        assert url is not None
+        try:
+            while True:
+                self.browser.set_page_load_timeout(15)
+                self.browser.get(url)
+                scream.say('Data from web retrieved')
+                doc = html.document_fromstring(unicode(self.browser.page_source))
+                scream.say('Page source sent further')
+                ns = doc.xpath('//ul[@class="numbers-summary"]')
+                scream.say('Xpath done searching')
+                scream.say('Element found?: ' + str(len(ns) == 1))
+                element = ns[0]
+                local_soup = BeautifulSoup(etree.tostring(element))
+
+                enumarables = local_soup.findAll("li")
+                commits = enumarables[0]
+                scream.say('enumarables[0]')
+                commits_number = analyze_tag(commits.find("span", {"class": "num"}))
+                scream.say('analyze_tag finished execution for commits_number')
+                result['commits'] = commits_number
+                branches = enumarables[1]
+                branches_number = analyze_tag(branches.find("span", {"class": "num"}))
+                result['branches'] = branches_number
+                releases = enumarables[2]
+                releases_number = analyze_tag(releases.find("span", {"class": "num"}))
+                result['releases'] = releases_number
+                contributors = enumarables[3]
+                contributors_number = analyze_tag(contributors.find("span", {"class": "num"}))
+                result['contributors'] = contributors_number
+
+                result['issues'] = issues_number
+                result['pulls'] = pulls_number
+                break
+        except TypeError as ot:
+            scream.say('No response from selenium. Retry')
+            time.sleep(2.0)
+        except Exception as e:
+            scream.say('No response from selenium. Retry')
+            time.sleep(2.0)
+        return result
+
 
     def is_finished(self):
         return self.finished if self.finished is not None else False
