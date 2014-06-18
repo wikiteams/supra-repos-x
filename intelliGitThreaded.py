@@ -246,7 +246,7 @@ developer_revealed(repository, repo, contributor, result_writer)
 return nothing, but writes final result row to a csv file
 repository = github object, repo = my class object, contributor = nameduser
 '''
-def developer_revealed(repository, repo, contributor, result_writer):
+def developer_revealed(thread_getter_instance, repository, repo, contributor, result_writer):
     developer_login = contributor.login
     scream.say('Assigning a contributor: ' + str(developer_login) + ' to a repo: ' + str(repository.name))
     developer_name = contributor.name
@@ -278,6 +278,14 @@ def developer_revealed(repository, repo, contributor, result_writer):
         total_network_count = 0
         total_his_collaborators = 0
         total_his_contributors = 0
+
+        if count___ == 'selenium':
+            total_his_commits = 0
+            total_his_branches = 0
+            total_his_releases = 0
+            total_his_issues = 0
+            total_his_pull_requests = 0
+
         try:
             for his_repo in his_repositories:
                 total_his_repositories += 1
@@ -316,6 +324,13 @@ def developer_revealed(repository, repo, contributor, result_writer):
                     assert total_his_collaborators is not None
                 elif count___ == 'selenium':
                     scream.say('Using selenium for thread about  ' + developer_login + ' repositories')
+                    result = thread_getter_instance.analyze_with_selenium(his_repo)  # wyciagnij statystyki przez selenium, i zwroc w tablicy:
+                    # commity, branche, releases, contributors, issues, pull requests
+                    total_his_commits += result['commits']
+                    total_his_branches += result['branches']
+                    total_his_releases += result['releases']
+                    total_his_issues += result['issues']
+                    total_his_pull_requests += result['pulls']
                 else:
                     while True:
                         try:
@@ -330,7 +345,7 @@ def developer_revealed(repository, repo, contributor, result_writer):
                             break
                         except Exception as exc:
                             scream.log_warning('Not ready data while revealing details.. ' +
-                                 ', error({0})'.format(str(exc)), True)
+                                               ', error({0})'.format(str(exc)), True)
                             freeze('StatsContribution not ready.. waiting for the server to provide good data')
             break
         except Exception as e:
@@ -451,6 +466,9 @@ class GeneralGetter(threading.Thread):
         browser.implicitly_wait(15)
         scream.say('Selenium ready for action')
 
+    def analyze_with_selenium(self, repository):
+        scream.say('Starting webinterpret..')
+
     def is_finished(self):
         return self.finished if self.finished is not None else False
 
@@ -477,7 +495,7 @@ class GeneralGetter(threading.Thread):
                     try:
                         contributor___ = contributor[1]
                         repo_contributors.append(contributor___)
-                        developer_revealed(repository, repo, contributor___, result_writer)
+                        developer_revealed(self, repository, repo, contributor___, result_writer)
                         break
                     except TypeError as e:
                         scream.log_error('Repo + Contributor TypeError, or paginated through' +
