@@ -2,3 +2,4 @@ PyGithub
 lxml
 BeautifulSoup4
 pyvirtualdisplay
+selenium
