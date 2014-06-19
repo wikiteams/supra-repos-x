@@ -1,6 +1,5 @@
 import sys
 import logging
-import logging.handlers
 import logging.config
 
 DISABLE__STD = False

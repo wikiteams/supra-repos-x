@@ -370,7 +370,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               str(developer_location), str(developer_total_private_repos), str(developer_total_public_repos)])
+                               str(developer_location), str(developer_total_private_repos), str(developer_total_public_repos),
+                               str(total_his_issues), str(total_his_pull_requests)])
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -379,7 +380,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               developer_location, str(developer_total_private_repos), str(developer_total_public_repos)])
+                               developer_location, str(developer_total_private_repos), str(developer_total_public_repos),
+                               str(total_his_issues), str(total_his_pull_requests)])
 
 
 def freeze(message):
@@ -391,11 +393,14 @@ def freeze(message):
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 'dev_login', 'dev_name',
-                 'followers', 'following', 'collaborators', 'company', 'contributions', 'created_at', 'hireable',
-                 'total_his_repositories', 'total_his_stars', 'total_his_collaborators', 'total_his_contributors',
-                 'total_his_watchers', 'total_his_forks', 'total_his_has_issues',
-                 'total_his_has_wiki', 'total_his_open_issues', 'total_network_count')
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 'developer_login', 'developer_name',
+                 'developer_followers', 'developer_following', 'developer_collaborators', 'developer_company', 'developer_contributions',
+                 'created_at', 'developer_is_hireable', 'total_his_repositories', 'total_in-his-repos_stars',
+                 'total_in-his-repos_collaborators', 'total_in-his-repos_contributors',
+                 'total_in-his-repos_watchers', 'total_in-his-repos_forks', 'total_in-his-repos_has_issues',
+                 'total_in-his-repos_has_wiki', 'total_in-his-repos_open_issues', 'total_network_count',
+                 'developer_location', 'developer_total_private_repos',
+                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests')
         devs_head_writer.writerow(tempv)
 
 
@@ -473,7 +478,7 @@ class GeneralGetter(threading.Thread):
         result = dict()
         scream.say('Starting webinterpret..')
         assert repository is not None
-        url = repository.url
+        url = repository.html_url
         assert url is not None
         try:
             while True:
@@ -481,46 +486,69 @@ class GeneralGetter(threading.Thread):
                 self.browser.get(url)
                 scream.say('Data from web retrieved')
                 doc = html.document_fromstring(unicode(self.browser.page_source))
+                print url
+                scream.say('Continue to work on ' + url)
                 scream.say('Page source sent further')
 
                 scream.say('Verify if 404 (repo deleted) otherwise keep on going')
                 parallax = doc.xpath('//div[@id="parallax_illustration"]')
+
                 if (len(parallax) > 0):
                     scream.say('Verified that 404 (repo deleted)')
                     result['status'] = '404'
                     return result
 
+                scream.say('Verified that not 404')
+
                 ns = doc.xpath('//ul[@class="numbers-summary"]')
                 sunken = doc.xpath('//ul[@class="sunken-menu-group"]')
-                element_sunken = sunken[0]
-                local_soup_sunken = BeautifulSoup(etree.tostring(element_sunken))
 
+                scream.say('XPath made some search for ' + url + ' .. move on to bsoup..')
                 scream.say('Xpath done searching')
                 scream.say('Element found?: ' + str(len(ns) == 1))
+
                 element = ns[0]
+                element_sunken = sunken[0]
                 local_soup = BeautifulSoup(etree.tostring(element))
+                local_soup_sunken = BeautifulSoup(etree.tostring(element_sunken))
 
                 enumarables = local_soup.findAll("li")
+                enumarables_more = local_soup_sunken.findAll("li")
+
                 commits = enumarables[0]
                 scream.say('enumarables[0]')
                 commits_number = analyze_tag(commits.find("span", {"class": "num"}))
                 scream.say('analyze_tag finished execution for commits_number')
                 result['commits'] = commits_number
+                scream.say('enumarables[1]')
                 branches = enumarables[1]
                 branches_number = analyze_tag(branches.find("span", {"class": "num"}))
                 result['branches'] = branches_number
+                scream.say('enumarables[2]')
                 releases = enumarables[2]
                 releases_number = analyze_tag(releases.find("span", {"class": "num"}))
                 result['releases'] = releases_number
+                scream.say('enumarables[3]')
                 contributors = enumarables[3]
                 contributors_number = analyze_tag(contributors.find("span", {"class": "num"}))
                 result['contributors'] = contributors_number
 
-                enumarables2 = local_soup_sunken.findAll("li")
-                issues_number = analyze_tag(enumarables2[1].find("span", {"class": "counter"}))
-                result['issues'] = issues_number
-                pulls_number = analyze_tag(enumarables2[2].find("span", {"class": "counter"}))
-                result['pulls'] = pulls_number
+                if (len(enumarables_more) < 3):
+                    scream.say('Issues disabled for this repo')
+                    scream.say('enumarables_more[1] (pulls)')
+                    pulls_tag = enumarables_more[1]
+                    pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
+                    result['pulls'] = pulls_number
+                else:
+                    scream.say('enumarables_more[1] (issues)')
+                    issues_tag = enumarables_more[1]
+                    issues_number = analyze_tag(issues_tag.find("span", {"class": "counter"}))
+                    result['issues'] = issues_number
+                    scream.say('enumarables_more[2] (pulls)')
+                    pulls_tag = enumarables_more[2]
+                    pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
+                    result['pulls'] = pulls_number
+                
                 result['status'] = 'OK'
                 break
         except TypeError as ot:
