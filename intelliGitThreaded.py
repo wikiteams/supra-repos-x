@@ -326,6 +326,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                     scream.say('Using selenium for thread about  ' + developer_login + ' repositories')
                     result = thread_getter_instance.analyze_with_selenium(his_repo)  # wyciagnij statystyki przez selenium, i zwroc w tablicy:
                     # commity, branche, releases, contributors, issues, pull requests
+                    if result['status'] == '404':
+                        continue
                     total_his_commits += result['commits']
                     total_his_branches += result['branches']
                     total_his_releases += result['releases']
@@ -480,7 +482,19 @@ class GeneralGetter(threading.Thread):
                 scream.say('Data from web retrieved')
                 doc = html.document_fromstring(unicode(self.browser.page_source))
                 scream.say('Page source sent further')
+
+                scream.say('Verify if 404 (repo deleted) otherwise keep on going')
+                parallax = doc.xpath('//div[@id="parallax_illustration"]')
+                if (len(parallax) > 0):
+                    scream.say('Verified that 404 (repo deleted)')
+                    result['status'] = '404'
+                    return result
+
                 ns = doc.xpath('//ul[@class="numbers-summary"]')
+                sunken = doc.xpath('//ul[@class="sunken-menu-group"]')
+                element_sunken = sunken[0]
+                local_soup_sunken = BeautifulSoup(etree.tostring(element_sunken))
+
                 scream.say('Xpath done searching')
                 scream.say('Element found?: ' + str(len(ns) == 1))
                 element = ns[0]
@@ -502,13 +516,19 @@ class GeneralGetter(threading.Thread):
                 contributors_number = analyze_tag(contributors.find("span", {"class": "num"}))
                 result['contributors'] = contributors_number
 
+                enumarables2 = local_soup_sunken.findAll("li")
+                issues_number = analyze_tag(enumarables2[1].find("span", {"class": "counter"}))
                 result['issues'] = issues_number
+                pulls_number = analyze_tag(enumarables2[2].find("span", {"class": "counter"}))
                 result['pulls'] = pulls_number
+                result['status'] = 'OK'
                 break
         except TypeError as ot:
-            scream.say('No response from selenium. Retry')
-            time.sleep(2.0)
+            scream.say(str(ot))
+            scream.say('Scrambled results (TypeError). Maybe GitHub down. Retry')
+            time.sleep(5.0)
         except Exception as e:
+            scream.say(str(e))
             scream.say('No response from selenium. Retry')
             time.sleep(2.0)
         return result
