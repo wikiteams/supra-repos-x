@@ -543,6 +543,7 @@ class GeneralGetter(threading.Thread):
                     pulls_tag = enumarables_more[1]
                     pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
                     result['pulls'] = pulls_number
+                    result['issues'] = '0'
                 else:
                     scream.say('enumarables_more[1] (issues)')
                     issues_tag = enumarables_more[1]
@@ -572,6 +573,19 @@ class GeneralGetter(threading.Thread):
     def set_finished(self, finished):
         scream.say('Marking the thread ' + str(self.threadId) + ' as finished..')
         self.finished = finished
+
+    def cleanup(self):
+        scream.say('Marking thread on ' + repo.getKey() + ' as finished..')
+        self.finished = True
+        scream.say('Terminating thread on ' + repo.getKey() + ' ...')
+        self.terminate()
+
+        try:
+            self.browser.quit()
+            self.display.stop()
+            self.display.popen.kill()
+        except:
+            scream.say('Did my best to clean up after selenium and pyvirtualdisplay')
 
     def get_data(self):
         global resume_stage
@@ -614,10 +628,7 @@ class GeneralGetter(threading.Thread):
             repo.setContributorsCount(len(repo_contributors))
             scream.log('Added contributors of count: ' + str(len(repo_contributors)) + ' to a repo ' + key)
 
-        scream.say('Marking thread on ' + repo.getKey() + ' as finished..')
-        self.finished = True
-        scream.say('Terminating thread on ' + repo.getKey() + ' ...')
-        self.terminate()
+        cleanup()
 
 
 def all_finished(threads):
