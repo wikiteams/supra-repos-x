@@ -374,7 +374,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               str(developer_location), str(developer_total_private_repos), str(developer_total_public_repos),
+                               (str(developer_location) if developer_location is not None else ''), str(developer_total_private_repos), str(developer_total_public_repos),
                                str(total_his_issues), str(total_his_pull_requests)])
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
@@ -384,7 +384,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                                str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               developer_location, str(developer_total_private_repos), str(developer_total_public_repos),
+                               (developer_location if developer_location is not None else ''), str(developer_total_private_repos), str(developer_total_public_repos),
                                str(total_his_issues), str(total_his_pull_requests)])
 
 
@@ -480,12 +480,12 @@ class GeneralGetter(threading.Thread):
 
     def analyze_with_selenium(self, repository):
         result = dict()
-        scream.say('Starting webinterpret..')
+        scream.say('Starting webinterpret for ' + repository.html_url + '..')
         assert repository is not None
         url = repository.html_url
         assert url is not None
-        try:
-            while True:
+        while True:
+            try:
                 self.browser.set_page_load_timeout(15)
                 self.browser.get(url)
                 scream.say('Data from web retrieved')
@@ -500,7 +500,7 @@ class GeneralGetter(threading.Thread):
                 if (len(parallax) > 0):
                     scream.say('Verified that 404 (repo deleted)')
                     result['status'] = '404'
-                    return result
+                    break
 
                 scream.say('Verified that not 404')
 
@@ -556,14 +556,16 @@ class GeneralGetter(threading.Thread):
                 
                 result['status'] = 'OK'
                 break
-        except TypeError as ot:
-            scream.say(str(ot))
-            scream.say('Scrambled results (TypeError). Maybe GitHub down. Retry')
-            time.sleep(5.0)
-        except Exception as e:
-            scream.say(str(e))
-            scream.say('No response from selenium. Retry')
-            time.sleep(2.0)
+            except TypeError as ot:
+                scream.say(str(ot))
+                scream.say('Scrambled results (TypeError). Maybe GitHub down. Retry')
+                time.sleep(5.0)
+            except Exception as e:
+                scream.say(str(e))
+                scream.say('No response from selenium. Retry')
+                time.sleep(2.0)
+
+        assert 'status' in result
         return result
 
 
@@ -689,7 +691,6 @@ if __name__ == "__main__":
                               timeout=timeout)
             github_clients.append(local_gh)
             github_clients_ids.append(credential['login'])
-            #scream.say(local_gh.get_api_status)
             scream.say(local_gh.rate_limiting)
         else:
             local_gh = Github(credential['login'], credential['pass'])
