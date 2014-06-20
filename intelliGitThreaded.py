@@ -59,6 +59,10 @@ timeout = 50
 sleepy_head_time = 25
 
 
+def parse_number(s):
+    return int(float(s))
+
+
 def is_number(s):
     try:
         float(s)  # for int, long and float
@@ -328,12 +332,12 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor, re
                     # commity, branche, releases, contributors, issues, pull requests
                     if result['status'] == '404':
                         continue
-                    total_his_commits += result['commits']
-                    total_his_branches += result['branches']
-                    total_his_releases += result['releases']
-                    total_his_issues += result['issues']
-                    total_his_pull_requests += result['pulls']
-                    total_his_contributors += result['contributors']
+                    total_his_commits += parse_number(result['commits'])
+                    total_his_branches += parse_number(result['branches'])
+                    total_his_releases += parse_number(result['releases'])
+                    total_his_issues += parse_number(result['issues'])
+                    total_his_pull_requests += parse_number(result['pulls'])
+                    total_his_contributors += parse_number(result['contributors'])
                 else:
                     while True:
                         try:
