@@ -646,9 +646,9 @@ class GeneralGetter(threading.Thread):
             scream.say('Did my best to clean up after selenium and pyvirtualdisplay')
             if force_raise:
                 raise
-        scream.say('Marking thread on ' + repo.getKey() + ' as finished..')
+        scream.say('Marking thread on ' + self.repo.getKey() + ' as finished..')
         self.finished = True
-        scream.say('Terminating thread on ' + repo.getKey() + ' ...')
+        scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
         self.terminate()
 
 
@@ -658,25 +658,24 @@ class GeneralGetter(threading.Thread):
         scream.say('Executing inside-thread method get_data() for: ' + str(self.threadId))
         if resume_stage in [None, 'contributors']:
             #try:
-            scream.ssay('Checking size of a ' + str(repo.getKey()) + ' team')
+            scream.ssay('Checking size of a ' + str(self.repo.getKey()) + ' team')
             '1. Team size of a repository'
-            contributors = repository.get_contributors()
+            contributors = self.repository.get_contributors()
             assert contributors is not None
 
-            repo_contributors = set()
-
-            contributors_static = build_list_of_programmers(contributors, repo.getKey(), repository)
-            #print str(contributors_static)
-            for contributor in contributors_static.items():
+            self.repo_contributors = set()
+            self.contributors_static = build_list_of_programmers(contributors, self.repo.getKey(), self.repository)
+            for contributor in self.contributors_static.items():
                 scream.log_debug('move with contributor to next from contributors_static.items()', True)
                 while True:
                     scream.say('Inside while True: (line 674)')
                     try:
-                        contributor___ = contributor[1]
-                        scream.say(str(contributor___))
-                        repo_contributors.add(contributor___)
-                        scream.say(str(repo_contributors))
-                        developer_revealed(threading.current_thread(), repository, repo, contributor___)
+                        contributor_login = contributor[0]
+                        contributor_object = contributor[1]
+                        scream.say(str(contributor_login))
+                        self.repo_contributors.add(contributor_login)
+                        scream.say(str(self.repo_contributors))
+                        developer_revealed(threading.current_thread(), repository, repo, contributor_object)
                         scream.say('Finished revealing developer')
                         break
                     except TypeError as e:
@@ -702,10 +701,10 @@ class GeneralGetter(threading.Thread):
                             raise
                         #break
 
-            assert repo_contributors is not None
-            repo.setContributors(repo_contributors)
-            repo.setContributorsCount(len(repo_contributors))
-            scream.log('Added contributors of count: ' + str(len(repo_contributors)) + ' to a repo ' + key)
+            assert self.repo_contributors is not None
+            self.repo.setContributors(self.repo_contributors)
+            self.repo.setContributorsCount(len(self.repo_contributors))
+            scream.log('Added contributors of count: ' + str(len(self.repo_contributors)) + ' to a repo ' + key)
         self.cleanup()
 
 
