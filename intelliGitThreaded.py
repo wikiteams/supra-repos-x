@@ -80,7 +80,7 @@ def is_number(s):
 
 
 def analyze_tag(tag):
-    number = filter(lambda x: x.isdigit(), str(tag).strip())
+    number = filter(lambda x: x.isdigit(), str(tag).strip(',').strip())
     return number
 
 
