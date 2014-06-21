@@ -356,7 +356,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                     total_his_issues += result['issues']
                     total_his_pull_requests += result['pulls']
                     total_his_contributors += result['contributors']
-                else:
+                else:  # hence it is only when not selenium is used
                     while True:
                         try:
                             his_contributors = set()
@@ -600,7 +600,7 @@ class GeneralGetter(threading.Thread):
                     pulls_tag = enumarables_more[1]
                     pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
                     result['pulls'] = parse_number(pulls_number)
-                    result['issues'] = '0'
+                    result['issues'] = 0
                 else:
                     scream.say('enumarables_more[1] (issues)')
                     issues_tag = enumarables_more[1]
