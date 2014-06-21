@@ -443,48 +443,6 @@ def make_headers(filename_for_headers):
         devs_head_writer.writerow(tempv)
 
 
-'''
-def build_list_of_programmers(result_set_programmers,
-                              repo_key, repository)
-returns dict (github user name -> User object) 1..1
-key is a string contributor username (login)
-second object is actuall PyGithub User instance, meow !
-'''
-def build_list_of_programmers(result_set_programmers, repo_key, repository):
-    result_set = dict()
-    contributors__ = result_set_programmers
-
-    while True:
-        result_set.clear()
-        try:
-            for contributor in contributors__:
-                result_set[contributor.login] = contributor
-            break
-        except TypeError as e:
-            scream.log_error('Repo + Contributor TypeError, or paginated through' +
-                             ' contributors gave error. ' + key + ', error({0})'.
-                             format(str(e)), True)
-            repos_reported_execution_error.write(key + os.linesep)
-            if force_raise:
-                raise
-            #break
-        except socket.timeout as e:
-            scream.log_error('Timeout while revealing details.. ' +
-                             ', error({0})'.format(str(e)), True)
-            freeze('build_list_of_programmers will retry')
-            if force_raise:
-                raise
-            #break
-        except Exception as e:
-            scream.log_error('Exception while revealing details.. ' +
-                             ', error({0})'.format(str(e)), True)
-            freeze('build_list_of_programmers will retry')
-            if force_raise:
-                raise
-            #break
-    return result_set
-
-
 class GeneralGetter(threading.Thread):
     finished = False
     repository = None
@@ -652,6 +610,48 @@ class GeneralGetter(threading.Thread):
         self.terminate()
 
 
+    '''
+    def build_list_of_programmers(result_set_programmers,
+                                  repo_key, repository)
+    returns dict (github user name -> User object) 1..1
+    key is a string contributor username (login)
+    second object is actuall PyGithub User instance, meow !
+    '''
+    def build_list_of_programmers(self, result_set_programmers, repo_key, repository):
+        result_set = dict()
+        contributors__ = result_set_programmers
+
+        while True:
+            result_set.clear()
+            try:
+                for contributor in contributors__:
+                    result_set[contributor.login] = contributor
+                break
+            except TypeError as e:
+                scream.log_error('Repo + Contributor TypeError, or paginated through' +
+                                 ' contributors gave error. ' + key + ', error({0})'.
+                                 format(str(e)), True)
+                repos_reported_execution_error.write(key + os.linesep)
+                if force_raise:
+                    raise
+                #break
+            except socket.timeout as e:
+                scream.log_error('Timeout while revealing details.. ' +
+                                 ', error({0})'.format(str(e)), True)
+                freeze('build_list_of_programmers will retry')
+                if force_raise:
+                    raise
+                #break
+            except Exception as e:
+                scream.log_error('Exception while revealing details.. ' +
+                                 ', error({0})'.format(str(e)), True)
+                freeze('build_list_of_programmers will retry')
+                if force_raise:
+                    raise
+                #break
+        return result_set
+
+
     def get_data(self):
         global resume_stage
 
@@ -660,22 +660,22 @@ class GeneralGetter(threading.Thread):
             #try:
             scream.ssay('Checking size of a ' + str(self.repo.getKey()) + ' team')
             '1. Team size of a repository'
-            contributors = self.repository.get_contributors()
-            assert contributors is not None
+            self.contributors = self.repository.get_contributors()
+            assert self.contributors is not None
 
             self.repo_contributors = set()
-            self.contributors_static = build_list_of_programmers(contributors, self.repo.getKey(), self.repository)
+            self.contributors_static = self.build_list_of_programmers(self.contributors, self.repo.getKey(), self.repository)
             for contributor in self.contributors_static.items():
                 scream.log_debug('move with contributor to next from contributors_static.items()', True)
                 while True:
                     scream.say('Inside while True: (line 674)')
                     try:
-                        contributor_login = contributor[0]
-                        contributor_object = contributor[1]
-                        scream.say(str(contributor_login))
-                        self.repo_contributors.add(contributor_login)
+                        self.contributor_login = contributor[0]
+                        self.contributor_object = contributor[1]
+                        scream.say(str(self.contributor_login))
+                        self.repo_contributors.add(self.contributor_login)
                         scream.say(str(self.repo_contributors))
-                        developer_revealed(threading.current_thread(), repository, repo, contributor_object)
+                        developer_revealed(threading.current_thread(), self.repository, self.repo, self.contributor_object)
                         scream.say('Finished revealing developer')
                         break
                     except TypeError as e:
