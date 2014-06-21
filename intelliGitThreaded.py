@@ -534,40 +534,42 @@ class GeneralGetter(threading.Thread):
                 scream.say('enumarables[0]')
                 commits_number = analyze_tag(commits.find("span", {"class": "num"}))
                 scream.say('analyze_tag finished execution for commits_number')
+                scream.say('Before parse number: ' + str(commits_number))
                 result['commits'] = parse_number(commits_number)
                 scream.log_debug(result['commits'], True)
                 scream.say('enumarables[1]')
                 branches = enumarables[1]
                 branches_number = analyze_tag(branches.find("span", {"class": "num"}))
+                scream.say('Before parse number: ' + str(branches_number))
                 result['branches'] = parse_number(branches_number)
                 scream.log_debug(result['branches'], True)
                 scream.say('enumarables[2]')
                 releases = enumarables[2]
                 releases_number = analyze_tag(releases.find("span", {"class": "num"}))
+                scream.say('Before parse number: ' + str(releases_number))
                 result['releases'] = parse_number(releases_number)
                 scream.log_debug(result['releases'], True)
                 scream.say('enumarables[3]')
                 contributors = enumarables[3]
                 contributors_number = analyze_tag(contributors.find("span", {"class": "num"}))
+                scream.say('Before parse number: ' + str(contributors_number))
                 result['contributors'] = parse_number(contributors_number)
                 scream.log_debug(result['contributors'], True)
 
-                if (len(enumarables_more) < 3):
-                    scream.say('Issues disabled for this repo')
-                    scream.say('enumarables_more[1] (pulls)')
-                    pulls_tag = enumarables_more[1]
-                    pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
-                    result['pulls'] = parse_number(pulls_number)
-                    result['issues'] = 0
-                else:
-                    scream.say('enumarables_more[1] (issues)')
-                    issues_tag = enumarables_more[1]
-                    issues_number = analyze_tag(issues_tag.find("span", {"class": "counter"}))
-                    result['issues'] = parse_number(issues_number)
-                    scream.say('enumarables_more[2] (pulls)')
-                    pulls_tag = enumarables_more[2]
-                    pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
-                    result['pulls'] = parse_number(pulls_number)
+                result['issues'] = 0
+                result['pulls'] = 0
+
+                for enumerable___ in enumarables_more:
+                    if enumerable___["aria-label"] == "Pull Requests":
+                        pulls_tag = enumerable___
+                        pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
+                        scream.say('Before parse number: ' + str(pulls_number))
+                        result['pulls'] = parse_number(pulls_number)
+                    elif enumerable___["aria-label"] == "Issues":
+                        issues_tag = enumerable___
+                        issues_number = analyze_tag(issues_tag.find("span", {"class": "counter"}))
+                        scream.say('Before parse number: ' + str(issues_number))
+                        result['issues'] = parse_number(issues_number)
                 
                 result['status'] = 'OK'
                 break
