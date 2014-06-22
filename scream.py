@@ -1,7 +1,7 @@
 import sys
 import logging
-import logging.handlers
 import logging.config
+from termcolor import colored
 
 DISABLE__STD = False
 
@@ -28,28 +28,28 @@ def cout(s):
 
 def ssay(s):
     if intelliTag_verbose:
-        print str(s)
+        print colored(str(s),'green')
         logger.info(str(s))
 
 
 def log_error(s, cmd):
     if intelliTag_verbose:
         if cmd:
-            print str(s)
+            print colored(str(s),'red')
         logger.error(s)
 
 
 def log_warning(s, cmd):
     if intelliTag_verbose:
         if cmd:
-            print str(s)
+            print colored(str(s),'yellow')
         logger.warning(s)
 
 
 def log_debug(s, cmd):
     if intelliTag_verbose:
         if cmd:
-            print str(s)
+            print colored(str(s),'blue')
         logger.debug(s)
 
 
