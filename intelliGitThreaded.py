@@ -610,6 +610,7 @@ class GeneralGetter(threading.Thread):
 
     def cleanup(self):
         try:
+            self.browser.close()
             self.browser.quit()
             self.display.stop()
             self.display.popen.kill()
