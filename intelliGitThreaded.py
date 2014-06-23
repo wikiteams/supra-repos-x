@@ -38,6 +38,7 @@ import traceback
 
 
 count___ = 'selenium'
+result_filename__ = 'developers_revealed_from_top.csv'
 
 auth_with_tokens = True
 use_utf8 = True
@@ -146,6 +147,7 @@ for o, a in opts:
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
     elif o in ("-q", "--reverse"):
         reverse_queue = (a not in ['false', 'False'])
+        result_filename__ = 'developers_revealed_from_bottom.csv'
         scream.ssay('Queue will be reversed, program will start from end ' + str(reverse_queue))
 
 repos = Queue()
@@ -305,75 +307,84 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
         try:
             for his_repo in his_repositories:
-                total_his_repositories += 1
-                total_his_forks += his_repo.forks_count
-                total_his_stars += his_repo.stargazers_count
-                total_his_watchers += his_repo.watchers_count
-                total_his_has_issues += 1 if his_repo.has_issues else 0
-                total_his_has_wiki += 1 if his_repo.has_wiki else 0
-                total_his_open_issues += his_repo.open_issues
-                total_network_count += his_repo.network_count
 
-                if count___ == 'api':
-                    # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-                    total_his_contributors = None
-                    while True:
-                        try:
-                            total_his_contributors = 0
-                            #total_his_contributors = his_repo.get_contributors().totalCount -- this is buggy and will make errors
-                            total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
-                            break
-                        except:
-                            freeze('Exception in getting total_his_contributors')
-                            if force_raise:
-                                raise
-                    assert total_his_contributors is not None
+                try:
+                    total_his_repositories += 1
+                    total_his_forks += his_repo.forks_count
+                    total_his_stars += his_repo.stargazers_count
+                    total_his_watchers += his_repo.watchers_count
+                    total_his_has_issues += 1 if his_repo.has_issues else 0
+                    total_his_has_wiki += 1 if his_repo.has_wiki else 0
+                    total_his_open_issues += his_repo.open_issues
+                    total_network_count += his_repo.network_count
 
-                    # 4 Ilosc kontrybutorow, ktorzy sa w projektach przez niego utworzonych
-                    total_his_collaborators = None
-                    while True:
-                        try:
-                            total_his_collaborators = 0
-                            #total_his_collaborators = his_repo.get_collaborators().totalCount -- this is buggy and will make errors
-                            total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
-                            break
-                        except:
-                            freeze('Exception in getting total_his_collaborators')
-                            if force_raise:
-                                raise
-                    assert total_his_collaborators is not None
-                elif count___ == 'selenium':
-                    scream.say('Using selenium for thread about  ' + str(developer_login) + ' \'s repositories')
-                    result = thread_getter_instance.analyze_with_selenium(his_repo)  # wyciagnij statystyki przez selenium, i zwroc w tablicy:
-                    # commits, branches, releases, contributors, issues, pull requests
-                    if result['status'] == '404':
+                    if count___ == 'api':
+                        # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+                        total_his_contributors = None
+                        while True:
+                            try:
+                                total_his_contributors = 0
+                                #total_his_contributors = his_repo.get_contributors().totalCount -- this is buggy and will make errors
+                                total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
+                                break
+                            except:
+                                freeze('Exception in getting total_his_contributors')
+                                if force_raise:
+                                    raise
+                        assert total_his_contributors is not None
+
+                        # 4 Ilosc kontrybutorow, ktorzy sa w projektach przez niego utworzonych
+                        total_his_collaborators = None
+                        while True:
+                            try:
+                                total_his_collaborators = 0
+                                #total_his_collaborators = his_repo.get_collaborators().totalCount -- this is buggy and will make errors
+                                total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
+                                break
+                            except:
+                                freeze('Exception in getting total_his_collaborators')
+                                if force_raise:
+                                    raise
+                        assert total_his_collaborators is not None
+                    elif count___ == 'selenium':
+                        scream.say('Using selenium for thread about  ' + str(developer_login) + ' \'s repositories')
+                        result = thread_getter_instance.analyze_with_selenium(his_repo)  # wyciagnij statystyki przez selenium, i zwroc w tablicy:
+                        # commits, branches, releases, contributors, issues, pull requests
+                        if result['status'] == '404':
+                            continue
+                        if result['status'] == 'EMPTY':
+                            continue
+                        total_his_commits += result['commits']
+                        total_his_branches += result['branches']
+                        total_his_releases += result['releases']
+                        total_his_issues += result['issues']
+                        total_his_pull_requests += result['pulls']
+                        total_his_contributors += result['contributors']
+                    else:  # hence it is only when not selenium is used
+                        while True:
+                            try:
+                                his_contributors = set()
+                                stats = his_repo.get_stats_contributors()
+                                assert stats is not None
+                                for stat in stats:
+                                    if str(stat.author.login).strip() in ['None', '']:
+                                        continue
+                                    his_contributors.add(stat.author.login)
+                                total_his_contributors += len(his_contributors)
+                                break
+                            except Exception as exc:
+                                scream.log_warning('Not ready data while revealing details.. ' +
+                                                   ', error({0})'.format(str(exc)), True)
+                                freeze('StatsContribution not ready.. waiting for the server to provide good data')
+                                if force_raise:
+                                    raise
+                except GithubException as e:
+                    freeze(str(e) + ' in try per repo of x-dev repos')
+                    if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                        scream.log_debug("It is a private repo.. Skip!")
                         continue
-                    if result['status'] == 'EMPTY':
-                        continue
-                    total_his_commits += result['commits']
-                    total_his_branches += result['branches']
-                    total_his_releases += result['releases']
-                    total_his_issues += result['issues']
-                    total_his_pull_requests += result['pulls']
-                    total_his_contributors += result['contributors']
-                else:  # hence it is only when not selenium is used
-                    while True:
-                        try:
-                            his_contributors = set()
-                            stats = his_repo.get_stats_contributors()
-                            assert stats is not None
-                            for stat in stats:
-                                if str(stat.author.login).strip() in ['None', '']:
-                                    continue
-                                his_contributors.add(stat.author.login)
-                            total_his_contributors += len(his_contributors)
-                            break
-                        except Exception as exc:
-                            scream.log_warning('Not ready data while revealing details.. ' +
-                                               ', error({0})'.format(str(exc)), True)
-                            freeze('StatsContribution not ready.. waiting for the server to provide good data')
-                            if force_raise:
-                                raise
+                    if force_raise:
+                        raise
             break
         except Exception as e:
             freeze(str(e) + ' in main loop of developer_revealed()')
@@ -824,8 +835,8 @@ if __name__ == "__main__":
 
     iteration_step_count = 1
 
-    if not os.path.isfile('developers_revealed_from_top.csv'):
-        make_headers('developers_revealed_from_top.csv')
+    if not os.path.isfile(result_filename__):
+        make_headers(result_filename__)
 
     if reverse_queue:
         aux_stack = Stack()
@@ -834,7 +845,7 @@ if __name__ == "__main__":
         while not aux_stack.isEmpty():
             repos.put(aux_stack.pop())
 
-    with open('developers_revealed_from_top.csv', 'ab', 0) as result_file:
+    with open(result_filename__, 'ab', 0) as result_file:
         threads = []
         thread_id_count = 0
 
