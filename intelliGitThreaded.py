@@ -94,7 +94,7 @@ def usage():
 try:
     opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:z:qim:j:d:y", ["help", "tokens=",
                                "utf8=", "resume=", "resumestage=", "entity=", "verbose",
-                               "threads=", "timeout=", "reverse", "intelli", "safemargin=", "sleep=", "fraise=", "trace"])
+                               "threads=", "timeout=", "reverse", "intelli", "safemargin=", "sleep=", "fraise=", "trace", "resumeinclusive"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -869,9 +869,9 @@ if __name__ == "__main__":
                     resume_on_repo = None
                     iteration_step_count += 1
                     if resume_on_repo_inclusive:
-                        scream.say('Not skipping the ' + resume_on_repo)
+                        scream.say('Not skipping the ' + str(resume_on_repo_name))
                     else:
-                        scream.say('Starting from the ' + resume_on_repo)
+                        scream.say('Starting from the next from ' + str(resume_on_repo_name))
                         continue
 
             try:
