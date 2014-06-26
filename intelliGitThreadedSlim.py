@@ -340,7 +340,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                             ad___a += w.a
                             ad___d += w.d
                         result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
-                                                          str(developer_login), str(s['author']['login']), str(s['total']), str(ad___c), str(ad___a), str(ad___d)])
+                                                          str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
                 except GithubException as e:
                     freeze(str(e) + ' in try per repo of x-dev repos')
                     if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):

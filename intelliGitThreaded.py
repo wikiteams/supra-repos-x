@@ -25,10 +25,10 @@ import os.path
 import sys
 import codecs
 import cStringIO
-from bs4 import BeautifulSoup
-from lxml import html, etree
-from pyvirtualdisplay import Display
-from selenium import webdriver
+#from bs4 import BeautifulSoup
+#from lxml import html, etree
+#from pyvirtualdisplay import Display
+#from selenium import webdriver
 import __builtin__
 import socket
 import time
@@ -37,7 +37,7 @@ import traceback
 #import inspect
 
 
-count___ = 'selenium'
+count___ = 'api'
 result_filename__ = 'developers_revealed_from_top.csv'
 
 auth_with_tokens = True
@@ -94,7 +94,8 @@ def usage():
 try:
     opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:z:qim:j:d:y", ["help", "tokens=",
                                "utf8=", "resume=", "resumestage=", "entity=", "verbose",
-                               "threads=", "timeout=", "reverse", "intelli", "safemargin=", "sleep=", "fraise=", "trace", "resumeinclusive"])
+                               "threads=", "timeout=", "reverse", "intelli", "safemargin=",
+                               "sleep=", "fraise=", "trace", "resumeinclusive"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -478,7 +479,7 @@ class GeneralGetter(threading.Thread):
         # it is quite reasonable to initiate a display driver for selenium
         # per one getter, threads work on jobs linear so its the max partition of driver
         # we can allow, multiple threads working on one virtual display - its without sense
-        self.initiate_selenium()
+        #self.initiate_selenium()
         # now its ok to start retrieving data.. allonsy !
         self.get_data()
 
@@ -609,15 +610,15 @@ class GeneralGetter(threading.Thread):
         self.finished = finished
 
     def cleanup(self):
-        try:
-            self.browser.close()
-            self.browser.quit()
-            self.display.stop()
-            self.display.popen.kill()
-        except:
-            scream.say('Did my best to clean up after selenium and pyvirtualdisplay')
-            if force_raise:
-                raise
+        # try:
+        #     self.browser.close()
+        #     self.browser.quit()
+        #     self.display.stop()
+        #     self.display.popen.kill()
+        # except:
+        #     scream.say('Did my best to clean up after selenium and pyvirtualdisplay')
+        #     if force_raise:
+        #         raise
         scream.say('Marking thread on ' + self.repo.getKey() + ' as finished..')
         self.finished = True
         scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
