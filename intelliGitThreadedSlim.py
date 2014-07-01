@@ -308,6 +308,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     his_repositories = contributor.get_repos()
 
     # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
+    scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
     developer_works_during_bd = None
     developer_works_period = None
     response = urllib2.urlopen('http://osrc.dfm.io/' + str(developer_login) + '.json')
@@ -325,6 +326,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     count_nwh__ += (time_of_activity_per_hours[i] for i in range(18, 23))
     developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
     # -----------------------------------------------------------------------
+    scream.log_debug('Finished analyze OSRC card for user: ' + developer_following, True)
 
     while True:
         total_his_repositories = 0
