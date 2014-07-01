@@ -319,14 +319,14 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
             time_of_activity_per_hours[day_entry_element['day'].index(day___)] += parse_number(day___)
     # count activity during business day
     count_bd__ = 0
-    count_bd__ += (time_of_activity_per_hours[i] for i in range(9, 17))
+    count_bd__ += sum(time_of_activity_per_hours[i] for i in range(9, 17))
     # now count activity during not-busines hours :)
     count_nwh__ = 0
-    count_nwh__ += (time_of_activity_per_hours[i] for i in range(0, 8))
-    count_nwh__ += (time_of_activity_per_hours[i] for i in range(18, 23))
+    count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(0, 8))
+    count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 23))
     developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
     # -----------------------------------------------------------------------
-    scream.log_debug('Finished analyze OSRC card for user: ' + developer_following, True)
+    scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
 
     while True:
         total_his_repositories = 0
