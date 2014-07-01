@@ -11,7 +11,7 @@ https://github.com/wikiteams/github-data-tools/tree/master/pandas
 @update 1.07.2014
 '''
 
-version_name = 'Version 2.3.S1 codename: Tomato Slim'
+version_name = 'Version 2.3.S1 codename: Tomato Easy'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -36,7 +36,7 @@ import threading
 import traceback
 
 '''
-Niezaimplementowane wymiary oraz wyjasnienie czemu nie
+Niezaimplementowane wymiary oraz wyjasnienie
 
 7.  Wplyw na jakosc kodu globalnie i w repo
     [to jest oddzielnie i implementuje Blazej][generlanie nie wiem jak by to mialo wygladac]
@@ -338,24 +338,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         '''
         There are couple of statistics cards
         def get_stats_punch_card(self):
-            (Get the number of commits per hour in each day)
-            http://developer.github.com/v3/repos/statistics/#get-the-number-of-commits-per-hour-in-each-day
 
-        def get_stats_participation(self):
-            (Get the weekly commit count for the repo owner and everyone else)
-            http://developer.github.com/v3/repos/statistics/#get-the-weekly-commit-count-for-the-repo-owner-and-everyone-else
-
-        def get_stats_code_frequency(self):
-            (Get the number of additions and deletions per week)
-            http://developer.github.com/v3/repos/statistics/#get-the-number-of-additions-and-deletions-per-week
-
-        def get_stats_commit_activity(self):
-            (Get the number of commits per hour in each day)
-            developer.github.com/v3/repos/statistics/#get-the-number-of-commits-per-hour-in-each-day
-
-        def get_stats_contributors(self):
-            (Get contributor list with additions deletions and commit counts)
-            http://developer.github.com/v3/repos/statistics/#get-contributors-list-with-additions-deletions-and-commit-counts
         '''
 
         try:
