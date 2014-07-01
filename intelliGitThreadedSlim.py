@@ -15,6 +15,8 @@ version_name = 'Version 2.3.S1 codename: Tomato Slim'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
+import urllib2
+import json
 import csv
 from Queue import Queue
 import getopt
@@ -46,7 +48,6 @@ Niezaimplementowane wymiary oraz wyjasnienie czemu nie
 
 16. Ilosc commitow w rozbiciu na jezyki programowania (skills)
     [...]
-
 
 '''
 
@@ -289,9 +290,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     developer_login = contributor.login
     scream.log_debug('Assigning a contributor: ' + str(developer_login) + ' to a repo: ' + str(repository.name), True)
     developer_name = contributor.name
-    # 1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
+    # 1. Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     developer_followers = contributor.followers
-    # 2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
+    # 2. Ilosc osob, ktore followuja dewelopera [FollowEvent]
     developer_following = contributor.following
 
     developer_location = contributor.location
@@ -305,6 +306,25 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
     # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
     his_repositories = contributor.get_repos()
+
+    # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
+    developer_works_during_bd = None
+    developer_works_period = None
+    response = urllib2.urlopen('http://osrc.dfm.io/' + str(developer_login) + '.json')
+    data = json.load(response)
+    time_of_activity_per_hours = [0 for i in xrange(23)]
+    for day_entry_element in data['usage']['events']:
+        for day___ in day_entry_element['day']:
+            time_of_activity_per_hours[day_entry_element['day'].index(day___)] += parse_number(day___)
+    # count activity during business day
+    count_bd__ = 0
+    count_bd__ += (time_of_activity_per_hours[i] for i in range(9, 17))
+    # now count activity during not-busines hours :)
+    count_nwh__ = 0
+    count_nwh__ += (time_of_activity_per_hours[i] for i in range(0, 8))
+    count_nwh__ += (time_of_activity_per_hours[i] for i in range(18, 23))
+    developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
+    # -----------------------------------------------------------------------
 
     while True:
         total_his_repositories = 0
@@ -427,7 +447,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
                                (str(developer_location) if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -438,7 +458,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
                                (developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
 
     scream.log_debug('Wrote row to CSV.', True)
 
@@ -459,7 +479,8 @@ def make_headers(filename_for_headers):
                  'total_in-his-repos_watchers', 'total_in-his-repos_forks', 'total_in-his-repos_has_issues',
                  'total_in-his-repos_has_wiki', 'total_in-his-repos_open_issues', 'total_network_count',
                  'developer_location', 'developer_total_private_repos',
-                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests')
+                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests',
+                 'developer_works_during_bd', 'developer_works_period')
         devs_head_writer.writerow(tempv)
 
 
@@ -590,7 +611,7 @@ class GeneralGetter(threading.Thread):
                         issues_number = analyze_tag(issues_tag.find("span", {"class": "counter"}))
                         scream.say('Before parse number: ' + str(issues_number))
                         result['issues'] = parse_number(issues_number)
-                
+
                 result['status'] = 'OK'
                 break
             except TypeError as ot:
