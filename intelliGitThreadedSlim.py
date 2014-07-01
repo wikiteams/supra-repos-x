@@ -8,10 +8,10 @@ https://github.com/wikiteams/github-data-tools/tree/master/pandas
 @since 1.4.0408
 @author Oskar Jarczyk
 
-@update 21.06.2014
+@update 1.07.2014
 '''
 
-version_name = 'Version 2.3S codename: Tomato Slim'
+version_name = 'Version 2.3.S1 codename: Tomato Slim'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -35,6 +35,20 @@ import time
 import threading
 import traceback
 
+'''
+Niezaimplementowane wymiary oraz wyjasnienie
+
+7.  Wplyw na jakosc kodu globalnie i w repo
+    [to jest oddzielnie i implementuje Blazej][generlanie nie wiem jak by to mialo wygladac]
+
+10. Ilosc dyskusji pod kodem w repo
+    [dyskusje to oddzielny temat badan i watpie by byly latwo dostepne przez skrypty tego typu]
+
+16. Ilosc commitow w rozbiciu na jezyki programowania (skills)
+    [...]
+
+
+'''
 
 count___ = 'selenium'
 result_filename__ = 'developers_revealed_from_top_s.csv'
@@ -289,7 +303,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     developer_contributions = contributor.contributions
 
-    # - Ilosc projektow przez niego utworzonych
+    # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
     his_repositories = contributor.get_repos()
 
     while True:
@@ -304,21 +318,31 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         total_his_collaborators = 0
         total_his_contributors = 0
 
+        '''
         total_his_commits = 0
         total_his_branches = 0
         total_his_releases = 0
+        '''
         total_his_issues = 0
         total_his_pull_requests = 0
 
+        '''
         total_his_commits = 'N/A'
         total_his_branches = 'N/A'
         total_his_releases = 'N/A'
         total_his_issues = 'N/A'
         total_his_pull_requests = 'N/A'
         total_his_contributors = 'N/A'
+        '''
+
+        '''
+        There are couple of statistics cards
+        def get_stats_punch_card(self):
+
+        '''
 
         try:
-            for his_repo in his_repositories:
+            for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
 
                 total_his_repositories += 1
                 total_his_forks += his_repo.forks_count
