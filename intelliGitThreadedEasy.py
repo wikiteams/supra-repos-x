@@ -5,13 +5,13 @@ at one static moment on time (now)
 If you are interested in dymanic data, please visit
 https://github.com/wikiteams/github-data-tools/tree/master/pandas
 
-@since 1.4.0408
+@since 1.4.0705
 @author Oskar Jarczyk
 
-@update 1.07.2014
+@update 5.07.2014
 '''
 
-version_name = 'Version 2.3.S1 codename: Tomato Easy'
+version_name = 'Version 2.4L codename: Lightweight'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -117,6 +117,11 @@ except getopt.GetoptError as err:
     print str(err)  # will print something like "option -a not recognized"
     usage()
     sys.exit(2)
+
+if len(opts) < 2:
+    print 'There were ' + str(len(opts)) + ' arguments provided. Not to little? Check --help for more info.'
+else:
+    print 'There were ' + str(len(opts)) + ' arguments provided.'
 
 for o, a in opts:
     if o in ("-v", "--verbose"):
@@ -306,6 +311,27 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
     his_repositories = contributor.get_repos()
 
+    # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
+    scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
+    developer_works_during_bd = None
+    developer_works_period = None
+    response = urllib2.urlopen('http://osrc.dfm.io/' + str(developer_login) + '.json')
+    data = json.load(response)
+    time_of_activity_per_hours = [0 for i in xrange(23)]
+    for day_entry_element in data['usage']['events']:
+        for day___ in day_entry_element['day']:
+            time_of_activity_per_hours[day_entry_element['day'].index(day___)] += parse_number(day___)
+    # count activity during business day
+    count_bd__ = 0
+    count_bd__ += sum(time_of_activity_per_hours[i] for i in range(9, 17))
+    # now count activity during not-busines hours :)
+    count_nwh__ = 0
+    count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(0, 8))
+    count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 23))
+    developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
+    # -----------------------------------------------------------------------
+    scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
+
     while True:
         total_his_repositories = 0
         total_his_stars = 0
@@ -410,7 +436,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
                                (str(developer_location) if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -421,7 +447,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
                                (developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
 
     scream.log_debug('Wrote row to CSV.', True)
 
@@ -912,6 +938,9 @@ if __name__ == "__main__":
                 scream.log_warning('Repo with key + ' + key +
                                    ' made exception in API, error({0}): {1}'.
                                    format(e.status, e.data), True)
+                if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                    scream.log_debug("It is now a private repo.. Skip!")
+                    continue
                 repos_reported_execution_error.write(key + os.linesep)
                 freeze(str(e) + ' in the main loop (most top try-catch)')
                 scream.say('Trying again with repo ' + str(key))

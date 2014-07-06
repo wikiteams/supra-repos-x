@@ -921,8 +921,10 @@ if __name__ == "__main__":
                     scream.say('Working at the moment on repo: ' + str(repo.getKey()))
                     current_ghc = github_clients[num_modulo(thread_id_count)]
                     current_ghc_desc = github_clients_ids[num_modulo(thread_id_count)]
+
                     repository = current_ghc.get_repo(repo.getKey())
                     scream.log_debug('Got a repository from API', True)
+
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
                     scream.say('There are ' + str(repo.getStargazersCount()) + ' stargazers.')
@@ -952,6 +954,9 @@ if __name__ == "__main__":
                 scream.log_warning('Repo with key + ' + key +
                                    ' made exception in API, error({0}): {1}'.
                                    format(e.status, e.data), True)
+                if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                    scream.log_debug("It is now a private repo.. Skip!")
+                    continue
                 repos_reported_execution_error.write(key + os.linesep)
                 freeze(str(e) + ' in the main loop (most top try-catch)')
                 scream.say('Trying again with repo ' + str(key))
