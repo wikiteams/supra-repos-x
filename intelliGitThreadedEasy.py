@@ -36,6 +36,7 @@ import socket
 import time
 import threading
 import traceback
+import subprocess
 
 '''
 Niezaimplementowane wymiary oraz wyjasnienie
@@ -331,86 +332,88 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(0, 8))
     count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 23))
     developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
+    scream.log_debug('Running C program...')
+    developer_works_period = subprocess.Popen("'./hist_block ' + ' '.join(str(x) for x in time_of_activity_per_hours)", stdout=subprocess.PIPE).stdout.read()
     # -----------------------------------------------------------------------
     scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
 
-    while True:
-        total_his_repositories = 0
-        total_his_stars = 0
-        total_his_watchers = 0
-        total_his_forks = 0
-        total_his_has_issues = 0
-        total_his_has_wiki = 0
-        total_his_open_issues = 0
-        total_network_count = 0
-        total_his_collaborators = 0
-        total_his_contributors = 0
+    # while True:
+    #     total_his_repositories = 0
+    #     total_his_stars = 0
+    #     total_his_watchers = 0
+    #     total_his_forks = 0
+    #     total_his_has_issues = 0
+    #     total_his_has_wiki = 0
+    #     total_his_open_issues = 0
+    #     total_network_count = 0
+    #     total_his_collaborators = 0
+    #     total_his_contributors = 0
 
-        '''
-        total_his_commits = 0
-        total_his_branches = 0
-        total_his_releases = 0
-        '''
-        total_his_issues = 0
-        total_his_pull_requests = 0
+    #     '''
+    #     total_his_commits = 0
+    #     total_his_branches = 0
+    #     total_his_releases = 0
+    #     '''
+    #     total_his_issues = 0
+    #     total_his_pull_requests = 0
 
-        '''
-        total_his_commits = 'N/A'
-        total_his_branches = 'N/A'
-        total_his_releases = 'N/A'
-        total_his_issues = 'N/A'
-        total_his_pull_requests = 'N/A'
-        total_his_contributors = 'N/A'
-        '''
+    #     '''
+    #     total_his_commits = 'N/A'
+    #     total_his_branches = 'N/A'
+    #     total_his_releases = 'N/A'
+    #     total_his_issues = 'N/A'
+    #     total_his_pull_requests = 'N/A'
+    #     total_his_contributors = 'N/A'
+    #     '''
 
-        '''
-        There are couple of statistics cards
-        def get_stats_punch_card(self):
+    #     '''
+    #     There are couple of statistics cards
+    #     def get_stats_punch_card(self):
 
-        '''
+    #     '''
 
-        try:
-            for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
+    #     try:
+    #         for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
 
-                total_his_repositories += 1
-                total_his_forks += his_repo.forks_count
-                total_his_stars += his_repo.stargazers_count
-                total_his_watchers += his_repo.watchers_count
-                total_his_has_issues += 1 if his_repo.has_issues else 0
-                total_his_has_wiki += 1 if his_repo.has_wiki else 0
-                total_his_open_issues += his_repo.open_issues
-                total_network_count += his_repo.network_count
+    #             total_his_repositories += 1
+    #             total_his_forks += his_repo.forks_count
+    #             total_his_stars += his_repo.stargazers_count
+    #             total_his_watchers += his_repo.watchers_count
+    #             total_his_has_issues += 1 if his_repo.has_issues else 0
+    #             total_his_has_wiki += 1 if his_repo.has_wiki else 0
+    #             total_his_open_issues += his_repo.open_issues
+    #             total_network_count += his_repo.network_count
 
-                try:
-                    stats = his_repo.get_stats_contributors()
-                    for s in stats:
-                        ad___c = 0
-                        ad___a = 0
-                        ad___d = 0
-                        for w in s.weeks:
-                            ad___c += w.c
-                            ad___a += w.a
-                            ad___d += w.d
-                        result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
-                                                          str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
-                except GithubException as e:
-                    freeze(str(e) + ' in try per repo of x-dev repos')
-                    if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
-                        scream.log_debug("It is a private repo.. Skip!")
-                        continue
-                    if force_raise:
-                        raise
-                except Exception as e:
-                    freeze(str(e) + ' in try per repo of x-dev repos')
-                    # probably punch card not ready
-                    if force_raise:
-                        raise
-            break
-        except Exception as e:
-            freeze(str(e) + ' in main loop of developer_revealed()')
-            his_repositories = contributor.get_repos()
-            if force_raise:
-                raise
+    #             try:
+    #                 stats = his_repo.get_stats_contributors()
+    #                 for s in stats:
+    #                     ad___c = 0
+    #                     ad___a = 0
+    #                     ad___d = 0
+    #                     for w in s.weeks:
+    #                         ad___c += w.c
+    #                         ad___a += w.a
+    #                         ad___d += w.d
+    #                     result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
+    #                                                       str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
+    #             except GithubException as e:
+    #                 freeze(str(e) + ' in try per repo of x-dev repos')
+    #                 if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+    #                     scream.log_debug("It is a private repo.. Skip!")
+    #                     continue
+    #                 if force_raise:
+    #                     raise
+    #             except Exception as e:
+    #                 freeze(str(e) + ' in try per repo of x-dev repos')
+    #                 # probably punch card not ready
+    #                 if force_raise:
+    #                     raise
+    #         break
+    #     except Exception as e:
+    #         freeze(str(e) + ' in main loop of developer_revealed()')
+    #         his_repositories = contributor.get_repos()
+    #         if force_raise:
+    #             raise
 
     # Developer company (if any given)
     company = contributor.company
@@ -441,12 +444,13 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                (str(developer_name) if developer_name is not None else ''), str(developer_followers), str(developer_following),
                                str(developer_collaborators), (str(company) if company is not None else ''), str(developer_contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
-                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
+                               '''str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
+                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),'''
                                (str(developer_location) if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
+                               str(developer_works_during_bd), str(developer_works_period)])
+                               # str(total_his_issues), str(total_his_pull_requests)
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()),
 
@@ -460,12 +464,13 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
                                str(developer_collaborators), (company if company is not None else ''), str(developer_contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
-                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
+                               '''str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
                                str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
+                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),'''
                                (developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
+                               str(developer_works_during_bd), str(developer_works_period)])
+                               # str(total_his_issues), str(total_his_pull_requests)
 
     scream.log_debug('Wrote row to CSV.', True)
 
