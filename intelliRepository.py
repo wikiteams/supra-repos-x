@@ -41,6 +41,7 @@ class MyRepository():
     repository_private = None
     repository_pulls = None
     repository_pushed_at = None
+    repository_updated_at = None
     repository_size = None
     repository_stargazers_count = None
     repository_subscribers = None
@@ -83,6 +84,12 @@ class MyRepository():
 
     def getName(self):
         return self.repository_name
+
+    def setOrganization(self, repository_organization):
+        self.repository_organization = repository_organization
+
+    def getOrganization(self):
+        return self.repository_organization
 
     def setDescription(self, repository_description):
         self.repository_description = repository_description
@@ -212,6 +219,24 @@ class MyRepository():
 
     def getIssues(self):
         return self.repository_issues
+
+    def setPushedAt(self, repository_pushed_at):
+        self.repository_pushed_at = repository_pushed_at
+
+    def getPushedAt(self):
+        return self.repository_pushed_at
+
+    def setUpdatedAt(self, repository_updated_at):
+        self.repository_updated_at = repository_updated_at
+
+    def getUpdatedAt(self):
+        return self.repository_updated_at
+
+    def setOpenedIssues(self, repository_open_issues):
+        self.repository_open_issues = repository_open_issues
+
+    def getOpenedIssues(self):
+        return self.repository_open_issues
 
     def setMasterBranch(self, repository_master_branch):
         self.repository_master_branch = repository_master_branch
