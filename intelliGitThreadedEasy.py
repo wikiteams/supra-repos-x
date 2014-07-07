@@ -472,8 +472,8 @@ class GeneralGetter(threading.Thread):
     def cleanup(self):
         scream.say('Marking thread on ' + self.repo.getKey() + ' as finished..')
         self.finished = True
-        scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
-        self.terminate()
+        #scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
+        #self.terminate()
 
 
     '''
