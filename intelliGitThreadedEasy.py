@@ -324,6 +324,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     for day_entry_element in data['usage']['events']:
         for day___ in day_entry_element['day']:
             time_of_activity_per_hours[day_entry_element['day'].index(day___)] += parse_number(day___)
+    scream.log_debug("Histogram for hours for user: " + str(developer_login) + ' created..', True)
     # count activity during business day
     count_bd__ = 0
     count_bd__ += sum(time_of_activity_per_hours[i] for i in range(9, 17))
@@ -332,8 +333,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(0, 8))
     count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 23))
     developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
-    scream.log_debug('Running C program...')
-    developer_works_period = subprocess.Popen("'./hist_block ' + ' '.join(str(x) for x in time_of_activity_per_hours)", stdout=subprocess.PIPE).stdout.read()
+    scream.log_debug('Running C program...', True)
+    args___ = ['./hist_block'] + [str(x) for x in time_of_activity_per_hours]
+    developer_works_period = subprocess.Popen(args___, stdout=subprocess.PIPE).stdout.read()
     # -----------------------------------------------------------------------
     scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
 
