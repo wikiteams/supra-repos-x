@@ -27,10 +27,10 @@ import os.path
 import sys
 import codecs
 import cStringIO
-from bs4 import BeautifulSoup
-from lxml import html, etree
-from pyvirtualdisplay import Display
-from selenium import webdriver
+#from bs4 import BeautifulSoup
+#from lxml import html, etree
+#from pyvirtualdisplay import Display
+#from selenium import webdriver
 import __builtin__
 import socket
 import time

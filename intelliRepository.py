@@ -133,6 +133,12 @@ class MyRepository():
     def getHasWiki(self):
         return self.repository_has_wiki
 
+    def setHasIssues(self, repository_has_issues):
+        self.repository_has_issues = repository_has_issues
+
+    def getHasIssues(self):
+        return self.repository_has_issues
+
     def setHasForks(self, repository_has_forks):
         self.repository_has_forks = repository_has_forks
 
