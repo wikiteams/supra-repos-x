@@ -15,6 +15,8 @@ version_name = 'Version 2.4L codename: Lightweight'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
+import urllib2
+import json
 import csv
 from Queue import Queue
 import getopt
@@ -916,6 +918,30 @@ if __name__ == "__main__":
                     repo.setWatchersCount(repository.watchers_count)  # PyGithub must be joking, this works, watchers_count not
                     scream.say('There are ' + str(repo.getWatchersCount()) + ' watchers.')
                     assert repo.getWatchersCount() is not None
+
+                    scream.say('Getting more properties for the Repository.py object.')
+                    repo.setCreatedAt(repository.created_at)
+                    repo.setDefaultBranch(repository.default_branch)
+                    repo.setDescription(repository.description)
+                    scream.say('Getting more properties for the Repository.py object..')
+                    repo.setIsFork(repository.fork)
+                    repo.setForks(repository.forks)
+                    repo.setForksCount(repository.forks_count)
+                    scream.say('Getting more properties for the Repository.py object...')
+                    repo.setHasDownloads(repository.has_downloads)
+                    repo.setHasWiki(repository.has_wiki)
+                    repo.setHasIssues(repository.has_issues)
+                    repo.setHasForks(repository.has_forks)
+                    scream.say('Getting more properties for the Repository.py object....')
+                    repo.setLanguage(repository.language)
+                    repo.setMasterBranch(repository.master_branch)
+                    repo.setNetworkCount(repository.network_count)
+                    repo.setOpenedIssues(repository.opened_issues)
+                    scream.say('Getting more properties for the Repository.py object.....')
+                    repo.setOrganization(repository.organization)
+                    repo.setPushedAt(repository.pushed_at)
+                    repo.setUpdatedAt(repository.updated_at)
+
                     # from this line move everything to a thread!
                     scream.say('Create instance of GeneralGetter with ID ' + str(thread_id_count) + ' and token ' + str(current_ghc_desc))
                     scream.log_debug('Make GeneralGetter object', True)

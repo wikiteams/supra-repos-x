@@ -19,13 +19,15 @@ class MyRepository():
     repository_contributors = None
     repository_contributors_count = None
     repository_created_at = None
+    repository_default_branch = None
     repository_description = None
-    repository_fork = None
+    repository_is_fork = None
     repository_forks = None
     repository_forks_count = None
     repository_has_downloads = None
     repository_has_issues = None
     repository_has_wiki = None
+    repository_has_forks = None
     repository_homepage = None
     repository_integrate_branch = None
     repository_issues = None
@@ -44,6 +46,7 @@ class MyRepository():
     repository_subscribers = None
     repository_watchers = None
     repository_url = None
+    repository_network_count = None
     repo_object = None
 
     def setRepoObject(self, repoobject):
@@ -81,14 +84,59 @@ class MyRepository():
     def getName(self):
         return self.repository_name
 
+    def setDescription(self, repository_description):
+        self.repository_description = repository_description
+
+    def getDescription(self):
+        return self.repository_description
+
     def setOwner(self, owner):
         self.repository_owner = owner
 
     def getOwner(self):
         return self.repository_owner
 
+    def setCreatedAt(self, repository_created_at):
+        self.repository_created_at = repository_created_at
+
+    def getCreatedAt(self):
+        return self.repository_created_at
+
+    def setDefaultBranch(self, repository_default_branch):
+        self.repository_default_branch = repository_default_branch
+
+    def getDefaultBranch(self):
+        return self.repository_default_branch
+
     def setForks(self, forks):
         self.repository_forks = forks
+
+    def getForks(self):
+        return self.repository_forks
+
+    def setHasDownloads(self, repository_has_downloads):
+        self.repository_has_downloads = repository_has_downloads
+
+    def getHasDownloads(self):
+        return self.repository_has_downloads
+
+    def setHasWiki(self, repository_has_wiki):
+        self.repository_has_wiki = repository_has_wiki
+
+    def getHasWiki(self):
+        return self.repository_has_wiki
+
+    def setHasForks(self, repository_has_forks):
+        self.repository_has_forks = repository_has_forks
+
+    def getHasForks(self):
+        return self.repository_has_forks
+
+    def setIsFork(self, repository_is_fork):
+        self.repository_is_fork = repository_is_fork
+
+    def getIsFork(self):
+        return self.repository_is_fork
 
     def setCommits(self, commits):
         self.repository_commits = commits
@@ -99,8 +147,8 @@ class MyRepository():
     def getCommitsCount(self):
         return (len(self.repository_commits) if self.repository_commits is not None else 0)
 
-    def getForks(self):
-        return self.repository_forks
+    def setForksCount(self, repository_forks_count):
+        self.repository_forks_count = repository_forks_count
 
     def getForksCount(self):
         return self.repository_forks_count
@@ -147,6 +195,9 @@ class MyRepository():
     def setLanguage(self, languages):
         self.repository_language = languages
 
+    def getLanguage(self):
+        return self.repository_language
+
     def setLabels(self, labels):
         self.repository_labels = labels
 
@@ -161,6 +212,18 @@ class MyRepository():
 
     def getIssues(self):
         return self.repository_issues
+
+    def setMasterBranch(self, repository_master_branch):
+        self.repository_master_branch = repository_master_branch
+
+    def getMasterBranch(self):
+        return self.repository_master_branch
+
+    def setNetworkCount(self, repository_network_count):
+        self.repository_network_count = repository_network_count
+
+    def getNetworkCount(self):
+        return self.repository_network_count
 
     def getIssuesCount(self):
         return (len(self.repository_issues) if self.repository_issues is not None else 0)
