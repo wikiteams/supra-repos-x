@@ -429,7 +429,15 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
     if not use_utf8:
         result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()),
-                               str(repo.getStargazersCount()), str(repo.getWatchersCount()), str(developer_login),
+                               str(repo.getStargazersCount()), str(repo.getWatchersCount()),
+
+                               str(repo.getCreatedAt), str(repo.getDefaultBranch), str(repo.getDescription),
+                               str(repo.getIsFork), str(repo.getForks), str(repo.getForksCount),
+                               str(repo.getHasDownloads), str(repo.getHasWiki), str(repo.getHasIssues), str(repo.getHasForks),
+                               str(repo.getLanguage), str(repo.getMasterBranch), str(repo.getNetworkCount), str(repo.getOpenedIssues),
+                               str(repo.getOrganization), str(repo.getPushedAt), str(repo.getUpdatedAt),
+
+                               str(developer_login),
                                (str(developer_name) if developer_name is not None else ''), str(developer_followers), str(developer_following),
                                str(developer_collaborators), (str(company) if company is not None else ''), str(developer_contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
@@ -440,7 +448,15 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(developer_total_private_repos), str(developer_total_public_repos),
                                str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
     else:
-        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
+        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()),
+
+                               repo.getCreatedAt, repo.getDefaultBranch, repo.getDescription,
+                               repo.getIsFork, repo.getForks, repo.getForksCount,
+                               repo.getHasDownloads, repo.getHasWiki, repo.getHasIssues, repo.getHasForks,
+                               repo.getLanguage, repo.getMasterBranch, repo.getNetworkCount, repo.getOpenedIssues,
+                               repo.getOrganization, repo.getPushedAt, repo.getUpdatedAt,
+
+                               developer_login,
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
                                str(developer_collaborators), (company if company is not None else ''), str(developer_contributions),
                                str(created_at), (str(hireable) if hireable is not None else ''),
@@ -463,7 +479,13 @@ def freeze(message):
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 'developer_login', 'developer_name',
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 
+                 'repo.getCreatedAt', 'repo.getDefaultBranch', 'repo.getDescription',
+                 'repo.getIsFork', 'repo.getForks', 'repo.getForksCount',
+                 'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues', 'repo.getHasForks',
+                 'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
+                 'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
+                 'developer_login', 'developer_name',
                  'developer_followers', 'developer_following', 'developer_collaborators', 'developer_company', 'developer_contributions',
                  'created_at', 'developer_is_hireable', 'total_his_repositories', 'total_in-his-repos_stars',
                  'total_in-his-repos_collaborators', 'total_in-his-repos_contributors',
