@@ -970,7 +970,7 @@ if __name__ == "__main__":
                     repo.setLanguage(repository.language)
                     repo.setMasterBranch(repository.master_branch)
                     repo.setNetworkCount(repository.network_count)
-                    repo.setOpenedIssues(repository.opened_issues)
+                    repo.setOpenedIssues(repository.open_issues)
                     scream.say('Getting more properties for the Repository.py object.....')
                     repo.setOrganization(repository.organization)
                     repo.setPushedAt(repository.pushed_at)
