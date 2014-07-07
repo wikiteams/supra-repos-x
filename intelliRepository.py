@@ -139,11 +139,11 @@ class MyRepository():
     def getHasIssues(self):
         return self.repository_has_issues
 
-    def setHasForks(self, repository_has_forks):
-        self.repository_has_forks = repository_has_forks
+    # def setHasForks(self, repository_has_forks):
+    #     self.repository_has_forks = repository_has_forks
 
-    def getHasForks(self):
-        return self.repository_has_forks
+    # def getHasForks(self):
+    #     return self.repository_has_forks
 
     def setIsFork(self, repository_is_fork):
         self.repository_is_fork = repository_is_fork

@@ -441,7 +441,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
                                str(repo.getCreatedAt), str(repo.getDefaultBranch), str(repo.getDescription),
                                str(repo.getIsFork), str(repo.getForks), str(repo.getForksCount),
-                               str(repo.getHasDownloads), str(repo.getHasWiki), str(repo.getHasIssues), str(repo.getHasForks),
+                               str(repo.getHasDownloads), str(repo.getHasWiki), str(repo.getHasIssues),
                                str(repo.getLanguage), str(repo.getMasterBranch), str(repo.getNetworkCount), str(repo.getOpenedIssues),
                                str(repo.getOrganization), str(repo.getPushedAt), str(repo.getUpdatedAt),
 
@@ -462,7 +462,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
                                repo.getCreatedAt, repo.getDefaultBranch, repo.getDescription,
                                repo.getIsFork, repo.getForks, repo.getForksCount,
-                               repo.getHasDownloads, repo.getHasWiki, repo.getHasIssues, repo.getHasForks,
+                               repo.getHasDownloads, repo.getHasWiki, repo.getHasIssues,
                                repo.getLanguage, repo.getMasterBranch, repo.getNetworkCount, repo.getOpenedIssues,
                                repo.getOrganization, repo.getPushedAt, repo.getUpdatedAt,
 
@@ -494,7 +494,7 @@ def make_headers(filename_for_headers):
         tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 
                  'repo.getCreatedAt', 'repo.getDefaultBranch', 'repo.getDescription',
                  'repo.getIsFork', 'repo.getForks', 'repo.getForksCount',
-                 'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues', 'repo.getHasForks',
+                 'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues',
                  'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
                  'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
                  'developer_login', 'developer_name',
@@ -965,7 +965,7 @@ if __name__ == "__main__":
                     repo.setHasDownloads(repository.has_downloads)
                     repo.setHasWiki(repository.has_wiki)
                     repo.setHasIssues(repository.has_issues)
-                    repo.setHasForks(repository.has_forks)
+                    #repo.setHasForks(repository.has_forks)
                     scream.say('Getting more properties for the Repository.py object....')
                     repo.setLanguage(repository.language)
                     repo.setMasterBranch(repository.master_branch)
