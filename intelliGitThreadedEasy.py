@@ -312,7 +312,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     developer_contributions = contributor.contributions
 
     # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
-    his_repositories = contributor.get_repos()
+    # his_repositories = contributor.get_repos()
 
     # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
     scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
@@ -420,6 +420,11 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     created_at = contributor.created_at
     # Does the developer want to be hired?
     hireable = contributor.hireable
+    disk_usage = contributor.disk_usage
+
+    public_gists = contributor.public_gists
+    owned_private_repos = contributor.owned_private_repos
+    total_private_repos = contributor.total_private_repos
 
     scream.log_debug('Thread ' + str(thread_getter_instance.threadId) +
                      ' Finished revealing contributor: ' + str(developer_login) + ' in a repo: ' + str(repository.name), True)
@@ -449,7 +454,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),'''
                                (str(developer_location) if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(developer_works_during_bd), str(developer_works_period)])
+                               str(developer_works_during_bd), str(developer_works_period), str(disk_usage),
+                               str(public_gists), str(owned_private_repos), str(total_private_repos)])
                                # str(total_his_issues), str(total_his_pull_requests)
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()),
@@ -469,7 +475,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),'''
                                (developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(developer_works_during_bd), str(developer_works_period)])
+                               str(developer_works_during_bd), str(developer_works_period), disk_usage,
+                               str(public_gists), str(owned_private_repos), str(total_private_repos)])
                                # str(total_his_issues), str(total_his_pull_requests)
 
     scream.log_debug('Wrote row to CSV.', True)
