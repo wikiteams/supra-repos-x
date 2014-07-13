@@ -27,10 +27,6 @@ import os.path
 import sys
 import codecs
 import cStringIO
-#from bs4 import BeautifulSoup
-#from lxml import html, etree
-#from pyvirtualdisplay import Display
-#from selenium import webdriver
 import __builtin__
 import socket
 import time
@@ -429,13 +425,12 @@ def make_headers(filename_for_headers):
                  'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
                  'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
                  'developer_login', 'developer_name',
-                 'developer_followers', 'developer_following', 'developer_collaborators', 'developer_company', 'developer_contributions',
-                 'created_at', 'developer_is_hireable', 'total_his_repositories', 'total_in-his-repos_stars',
-                 'total_in-his-repos_collaborators', 'total_in-his-repos_contributors',
-                 'total_in-his-repos_watchers', 'total_in-his-repos_forks', 'total_in-his-repos_has_issues',
-                 'total_in-his-repos_has_wiki', 'total_in-his-repos_open_issues', 'total_network_count',
-                 'developer_location', 'developer_total_private_repos',
-                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests')
+                 'developer_followers', 'developer_following', 'developer_collaborators',
+                 'developer_company', 'developer_contributions',
+                 'created_at', 'developer_hireable', 'developer_location',
+                 'developer_total_private_repos', 'developer_total_public_repos', 'developer_works_during_bd',
+                 'developers_works_period', 'disk_usage',
+                 'public_gists', 'owned_private_repos', 'total_private_repos')
         devs_head_writer.writerow(tempv)
 
 
@@ -771,7 +766,7 @@ if __name__ == "__main__":
                     repo.setNetworkCount(repository.network_count)
                     repo.setOpenedIssues(repository.open_issues)
                     scream.say('Getting more properties for the Repository.py object.....')
-                    repo.setOrganization(repository.organization)
+                    repo.setOrganization(repository.organization.name if repository.organization is not None else '')
                     repo.setPushedAt(repository.pushed_at)
                     repo.setUpdatedAt(repository.updated_at)
 
