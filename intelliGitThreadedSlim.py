@@ -8,13 +8,15 @@ https://github.com/wikiteams/github-data-tools/tree/master/pandas
 @since 1.4.0408
 @author Oskar Jarczyk
 
-@update 21.06.2014
+@update 1.07.2014
 '''
 
-version_name = 'Version 2.3S codename: Tomato Slim'
+version_name = 'Version 2.3.S1 codename: Tomato Slim'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
+import urllib2
+import json
 import csv
 from Queue import Queue
 import getopt
@@ -35,6 +37,19 @@ import time
 import threading
 import traceback
 
+'''
+Niezaimplementowane wymiary oraz wyjasnienie czemu nie
+
+7.  Wplyw na jakosc kodu globalnie i w repo
+    [to jest oddzielnie i implementuje Blazej][generlanie nie wiem jak by to mialo wygladac]
+
+10. Ilosc dyskusji pod kodem w repo
+    [dyskusje to oddzielny temat badan i watpie by byly latwo dostepne przez skrypty tego typu]
+
+16. Ilosc commitow w rozbiciu na jezyki programowania (skills)
+    [...]
+
+'''
 
 count___ = 'selenium'
 result_filename__ = 'developers_revealed_from_top_s.csv'
@@ -275,9 +290,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     developer_login = contributor.login
     scream.log_debug('Assigning a contributor: ' + str(developer_login) + ' to a repo: ' + str(repository.name), True)
     developer_name = contributor.name
-    # 1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
+    # 1. Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     developer_followers = contributor.followers
-    # 2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
+    # 2. Ilosc osob, ktore followuja dewelopera [FollowEvent]
     developer_following = contributor.following
 
     developer_location = contributor.location
@@ -289,8 +304,29 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     developer_contributions = contributor.contributions
 
-    # - Ilosc projektow przez niego utworzonych
+    # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
     his_repositories = contributor.get_repos()
+
+    # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
+    scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
+    developer_works_during_bd = None
+    developer_works_period = None
+    response = urllib2.urlopen('http://osrc.dfm.io/' + str(developer_login) + '.json')
+    data = json.load(response)
+    time_of_activity_per_hours = [0 for i in xrange(23)]
+    for day_entry_element in data['usage']['events']:
+        for day___ in day_entry_element['day']:
+            time_of_activity_per_hours[day_entry_element['day'].index(day___)] += parse_number(day___)
+    # count activity during business day
+    count_bd__ = 0
+    count_bd__ += sum(time_of_activity_per_hours[i] for i in range(9, 17))
+    # now count activity during not-busines hours :)
+    count_nwh__ = 0
+    count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(0, 8))
+    count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 23))
+    developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
+    # -----------------------------------------------------------------------
+    scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
 
     while True:
         total_his_repositories = 0
@@ -304,21 +340,48 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         total_his_collaborators = 0
         total_his_contributors = 0
 
+        '''
         total_his_commits = 0
         total_his_branches = 0
         total_his_releases = 0
+        '''
         total_his_issues = 0
         total_his_pull_requests = 0
 
+        '''
         total_his_commits = 'N/A'
         total_his_branches = 'N/A'
         total_his_releases = 'N/A'
         total_his_issues = 'N/A'
         total_his_pull_requests = 'N/A'
         total_his_contributors = 'N/A'
+        '''
+
+        '''
+        There are couple of statistics cards
+        def get_stats_punch_card(self):
+            (Get the number of commits per hour in each day)
+            http://developer.github.com/v3/repos/statistics/#get-the-number-of-commits-per-hour-in-each-day
+
+        def get_stats_participation(self):
+            (Get the weekly commit count for the repo owner and everyone else)
+            http://developer.github.com/v3/repos/statistics/#get-the-weekly-commit-count-for-the-repo-owner-and-everyone-else
+
+        def get_stats_code_frequency(self):
+            (Get the number of additions and deletions per week)
+            http://developer.github.com/v3/repos/statistics/#get-the-number-of-additions-and-deletions-per-week
+
+        def get_stats_commit_activity(self):
+            (Get the number of commits per hour in each day)
+            developer.github.com/v3/repos/statistics/#get-the-number-of-commits-per-hour-in-each-day
+
+        def get_stats_contributors(self):
+            (Get contributor list with additions deletions and commit counts)
+            http://developer.github.com/v3/repos/statistics/#get-contributors-list-with-additions-deletions-and-commit-counts
+        '''
 
         try:
-            for his_repo in his_repositories:
+            for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
 
                 total_his_repositories += 1
                 total_his_forks += his_repo.forks_count
@@ -340,7 +403,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                             ad___a += w.a
                             ad___d += w.d
                         result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
-                                                          str(developer_login), str(s['author']['login']), str(s['total']), str(ad___c), str(ad___a), str(ad___d)])
+                                                          str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
                 except GithubException as e:
                     freeze(str(e) + ' in try per repo of x-dev repos')
                     if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
@@ -386,7 +449,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
                                (str(developer_location) if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
                                (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -397,7 +460,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
                                (developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
 
     scream.log_debug('Wrote row to CSV.', True)
 
@@ -418,7 +481,8 @@ def make_headers(filename_for_headers):
                  'total_in-his-repos_watchers', 'total_in-his-repos_forks', 'total_in-his-repos_has_issues',
                  'total_in-his-repos_has_wiki', 'total_in-his-repos_open_issues', 'total_network_count',
                  'developer_location', 'developer_total_private_repos',
-                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests')
+                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests',
+                 'developer_works_during_bd', 'developer_works_period')
         devs_head_writer.writerow(tempv)
 
 
@@ -549,7 +613,7 @@ class GeneralGetter(threading.Thread):
                         issues_number = analyze_tag(issues_tag.find("span", {"class": "counter"}))
                         scream.say('Before parse number: ' + str(issues_number))
                         result['issues'] = parse_number(issues_number)
-                
+
                 result['status'] = 'OK'
                 break
             except TypeError as ot:
@@ -857,8 +921,10 @@ if __name__ == "__main__":
                     scream.say('Working at the moment on repo: ' + str(repo.getKey()))
                     current_ghc = github_clients[num_modulo(thread_id_count)]
                     current_ghc_desc = github_clients_ids[num_modulo(thread_id_count)]
+
                     repository = current_ghc.get_repo(repo.getKey())
                     scream.log_debug('Got a repository from API', True)
+
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
                     scream.say('There are ' + str(repo.getStargazersCount()) + ' stargazers.')
@@ -888,6 +954,9 @@ if __name__ == "__main__":
                 scream.log_warning('Repo with key + ' + key +
                                    ' made exception in API, error({0}): {1}'.
                                    format(e.status, e.data), True)
+                if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                    scream.log_debug("It is now a private repo.. Skip!")
+                    continue
                 repos_reported_execution_error.write(key + os.linesep)
                 freeze(str(e) + ' in the main loop (most top try-catch)')
                 scream.say('Trying again with repo ' + str(key))

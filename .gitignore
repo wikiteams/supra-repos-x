@@ -9,11 +9,13 @@ __pycache__/
 .Python
 env/
 bin/
+bck/
 build/
 develop-eggs/
 dist/
 eggs/
 lib/
+local/
 lib64/
 parts/
 sdist/

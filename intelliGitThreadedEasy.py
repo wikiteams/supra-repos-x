@@ -5,16 +5,18 @@ at one static moment on time (now)
 If you are interested in dymanic data, please visit
 https://github.com/wikiteams/github-data-tools/tree/master/pandas
 
-@since 1.4.0408
+@since 1.4.0705
 @author Oskar Jarczyk
 
-@update 21.06.2014
+@update 5.07.2014
 '''
 
-version_name = 'Version 2.3 codename: Tomato'
+version_name = 'Version 2.4L codename: Lightweight'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
+import urllib2
+import json
 import csv
 from Queue import Queue
 import getopt
@@ -25,20 +27,32 @@ import os.path
 import sys
 import codecs
 import cStringIO
-#from bs4 import BeautifulSoup
-#from lxml import html, etree
-#from pyvirtualdisplay import Display
-#from selenium import webdriver
 import __builtin__
 import socket
 import time
 import threading
 import traceback
-#import inspect
+import subprocess
+
+'''
+Niezaimplementowane wymiary oraz wyjasnienie
+
+7.  Wplyw na jakosc kodu globalnie i w repo
+    [to jest oddzielnie i implementuje Blazej][generlanie nie wiem jak by to mialo wygladac]
+
+10. Ilosc dyskusji pod kodem w repo
+    [dyskusje to oddzielny temat badan i watpie by byly latwo dostepne przez skrypty tego typu]
+
+16. Ilosc commitow w rozbiciu na jezyki programowania (skills)
+    [...]
 
 
-count___ = 'api'
-result_filename__ = 'developers_revealed_from_top.csv'
+'''
+
+count___ = 'selenium'
+result_filename__ = 'developers_revealed_from_top_s.csv'
+punch_card__filename__ = 'developers_revealed_punch_card.csv'
+
 
 auth_with_tokens = True
 use_utf8 = True
@@ -63,6 +77,7 @@ force_raise = False
 show_trace = False
 
 result_writer = None
+result_punch_card_writer = None
 
 
 def parse_number(s):
@@ -101,6 +116,11 @@ except getopt.GetoptError as err:
     print str(err)  # will print something like "option -a not recognized"
     usage()
     sys.exit(2)
+
+if len(opts) < 2:
+    print 'There were ' + str(len(opts)) + ' arguments provided. Not to little? Check --help for more info.'
+else:
+    print 'There were ' + str(len(opts)) + ' arguments provided.'
 
 for o, a in opts:
     if o in ("-v", "--verbose"):
@@ -148,7 +168,7 @@ for o, a in opts:
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
     elif o in ("-q", "--reverse"):
         reverse_queue = (a not in ['false', 'False'])
-        result_filename__ = 'developers_revealed_from_bottom.csv'
+        result_filename__ = 'developers_revealed_from_bottom_s.csv'
         scream.ssay('Queue will be reversed, program will start from end ' + str(reverse_queue))
 
 repos = Queue()
@@ -259,6 +279,7 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
+
 '''
 developer_revealed(repository, repo, contributor, result_writer)
 return nothing, but writes final result row to a csv file
@@ -266,6 +287,9 @@ repository = github object, repo = my class object, contributor = nameduser
 '''
 def developer_revealed(thread_getter_instance, repository, repo, contributor):
     global result_writer
+    global result_punch_card_writer
+
+    assert result_punch_card_writer is not None
 
     developer_login = contributor.login
     scream.log_debug('Assigning a contributor: ' + str(developer_login) + ' to a repo: ' + str(repository.name), True)
@@ -284,122 +308,60 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     developer_contributions = contributor.contributions
 
-    # - Ilosc projektow przez niego utworzonych
-    his_repositories = contributor.get_repos()
+    # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
+    # his_repositories = contributor.get_repos()
+
+    # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
+    scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
+    developer_works_during_bd = None
+    developer_works_period = None
+    tries = 5
 
     while True:
-        total_his_repositories = 0
-        total_his_stars = 0
-        total_his_watchers = 0
-        total_his_forks = 0
-        total_his_has_issues = 0
-        total_his_has_wiki = 0
-        total_his_open_issues = 0
-        total_network_count = 0
-        total_his_collaborators = 0
-        total_his_contributors = 0
-
-        if count___ == 'selenium':
-            total_his_commits = 0
-            total_his_branches = 0
-            total_his_releases = 0
-            total_his_issues = 0
-            total_his_pull_requests = 0
-
         try:
-            for his_repo in his_repositories:
-
-                try:
-                    total_his_repositories += 1
-                    total_his_forks += his_repo.forks_count
-                    total_his_stars += his_repo.stargazers_count
-                    total_his_watchers += his_repo.watchers_count
-                    total_his_has_issues += 1 if his_repo.has_issues else 0
-                    total_his_has_wiki += 1 if his_repo.has_wiki else 0
-                    total_his_open_issues += his_repo.open_issues
-                    total_network_count += his_repo.network_count
-
-                    if count___ == 'api':
-                        # 3 Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-                        total_his_contributors = None
-                        while True:
-                            try:
-                                total_his_contributors = 0
-                                #total_his_contributors = his_repo.get_contributors().totalCount -- this is buggy and will make errors
-                                total_his_contributors += sum(1 for temp_object in his_repo.get_contributors())
-                                break
-                            except:
-                                freeze('Exception in getting total_his_contributors')
-                                if force_raise:
-                                    raise
-                        assert total_his_contributors is not None
-
-                        # 4 Ilosc kontrybutorow, ktorzy sa w projektach przez niego utworzonych
-                        total_his_collaborators = None
-                        while True:
-                            try:
-                                total_his_collaborators = 0
-                                #total_his_collaborators = his_repo.get_collaborators().totalCount -- this is buggy and will make errors
-                                total_his_collaborators += sum(1 for temp_object in his_repo.get_collaborators())
-                                break
-                            except:
-                                freeze('Exception in getting total_his_collaborators')
-                                if force_raise:
-                                    raise
-                        assert total_his_collaborators is not None
-                    elif count___ == 'selenium':
-                        scream.say('Using selenium for thread about  ' + str(developer_login) + ' \'s repositories')
-                        result = thread_getter_instance.analyze_with_selenium(his_repo)  # wyciagnij statystyki przez selenium, i zwroc w tablicy:
-                        # commits, branches, releases, contributors, issues, pull requests
-                        if result['status'] == '404':
-                            continue
-                        if result['status'] == 'EMPTY':
-                            continue
-                        total_his_commits += result['commits']
-                        total_his_branches += result['branches']
-                        total_his_releases += result['releases']
-                        total_his_issues += result['issues']
-                        total_his_pull_requests += result['pulls']
-                        total_his_contributors += result['contributors']
-                    else:  # hence it is only when not selenium is used
-                        while True:
-                            try:
-                                his_contributors = set()
-                                stats = his_repo.get_stats_contributors()
-                                assert stats is not None
-                                for stat in stats:
-                                    if str(stat.author.login).strip() in ['None', '']:
-                                        continue
-                                    his_contributors.add(stat.author.login)
-                                total_his_contributors += len(his_contributors)
-                                break
-                            except Exception as exc:
-                                scream.log_warning('Not ready data while revealing details.. ' +
-                                                   ', error({0})'.format(str(exc)), True)
-                                freeze('StatsContribution not ready.. waiting for the server to provide good data')
-                                if force_raise:
-                                    raise
-                except GithubException as e:
-                    freeze(str(e) + ' in try per repo of x-dev repos')
-                    if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
-                        scream.log_debug("It is a private repo.. Skip!")
-                        continue
-                    if force_raise:
-                        raise
+            response = urllib2.urlopen('http://osrc.dfm.io/' + str(developer_login) + '.json')
+            data = json.load(response)
+            time_of_activity_per_hours = [0 for i in xrange(24)]
+            for day_entry_element in data['usage']['events']:
+                for day___ in day_entry_element['day']:
+                    time_of_activity_per_hours[day_entry_element['day'].index(day___)] += parse_number(day___)
+            scream.log_debug("Histogram for hours for user: " + str(developer_login) + ' created..', True)
+            # count activity during business day
+            count_bd__ = 0
+            count_bd__ += sum(time_of_activity_per_hours[i] for i in range(9, 18))
+            # now count activity during not-busines hours :)
+            count_nwh__ = 0
+            count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(0, 9))
+            count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 24))
+            developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
+            scream.log_debug('Running C program...', True)
+            args___ = ['./hist_block'] + [str(x) for x in time_of_activity_per_hours]
+            developer_works_period = subprocess.Popen(args___, stdout=subprocess.PIPE).stdout.read()
+            # -----------------------------------------------------------------------
+            scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
             break
-        except Exception as e:
-            freeze(str(e) + ' in main loop of developer_revealed()')
-            his_repositories = contributor.get_repos()
-            if force_raise:
-                raise
+        except Exception:
+            freeze('OSRC gave error, probably 404')
+            scream.say('try ' + str(tries) + ' more times')
+            tries -= 1
+        finally:
+            if tries < 1:
+                developer_works_during_bd = 0
+                developer_works_period = 0
+                break
 
     # Developer company (if any given)
     company = contributor.company
     created_at = contributor.created_at
     # Does the developer want to be hired?
     hireable = contributor.hireable
+    disk_usage = contributor.disk_usage
 
-    scream.log_debug('Thread ' + str(thread_getter_instance.threadId) +
+    public_gists = contributor.public_gists
+    owned_private_repos = contributor.owned_private_repos
+    total_private_repos = contributor.total_private_repos
+
+    scream.log_debug('Thread ' + str(thread_getter_instance) +
                      ' Finished revealing contributor: ' + str(developer_login) + ' in a repo: ' + str(repository.name), True)
 
     if show_trace:
@@ -410,27 +372,43 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
     if not use_utf8:
         result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()),
-                               str(repo.getStargazersCount()), str(repo.getWatchersCount()), str(developer_login),
-                               (str(developer_name) if developer_name is not None else ''), str(developer_followers), str(developer_following),
-                               str(developer_collaborators), (str(company) if company is not None else ''), str(developer_contributions),
-                               str(created_at), (str(hireable) if hireable is not None else ''),
-                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
-                               str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               (str(developer_location) if developer_location is not None else ''),
+                               str(repo.getStargazersCount()), str(repo.getWatchersCount()),
+
+                               str(repo.getCreatedAt()), str(repo.getDefaultBranch()), str(repo.getDescription()),
+                               str(repo.getIsFork()), str(repo.getForks()), str(repo.getForksCount()),
+                               str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
+                               str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
+                               str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               str(developer_login),
+                               str(developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
+                               str(developer_collaborators), str(company if company is not None else ''), str(developer_contributions),
+                               str(created_at), str(hireable if hireable is not None else ''),
+                               str(developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(developer_works_during_bd), str(developer_works_period), str(disk_usage),
+                               str(public_gists), str(owned_private_repos), str(total_private_repos)])
+
     else:
-        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
-                               (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
-                               str(developer_collaborators), (company if company is not None else ''), str(developer_contributions),
-                               str(created_at), (str(hireable) if hireable is not None else ''),
-                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
-                               str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               (developer_location if developer_location is not None else ''),
+        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()),
+
+                               str(repo.getCreatedAt()), repo.getDefaultBranch(), repo.getDescription() if repo.getDescription() is not None else '',
+                               str(repo.getIsFork()), str(repo.getForks()), str(repo.getForksCount()),
+                               str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
+                               repo.getLanguage() if repo.getLanguage() is not None else '',
+                               repo.getMasterBranch() if repo.getMasterBranch() is not None else '',
+                               str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
+                               repo.getOrganization() if repo.getOrganization() is not None else '',
+                               str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               developer_login,
+                               developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
+                               str(developer_collaborators), company if company is not None else '', str(developer_contributions),
+                               str(created_at), str(hireable) if hireable is not None else '',
+                               developer_location if developer_location is not None else '',
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests)])
+                               str(developer_works_during_bd), str(developer_works_period), str(disk_usage),
+                               str(public_gists), str(owned_private_repos), str(total_private_repos)])
 
     scream.log_debug('Wrote row to CSV.', True)
 
@@ -444,14 +422,19 @@ def freeze(message):
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 'developer_login', 'developer_name',
-                 'developer_followers', 'developer_following', 'developer_collaborators', 'developer_company', 'developer_contributions',
-                 'created_at', 'developer_is_hireable', 'total_his_repositories', 'total_in-his-repos_stars',
-                 'total_in-his-repos_collaborators', 'total_in-his-repos_contributors',
-                 'total_in-his-repos_watchers', 'total_in-his-repos_forks', 'total_in-his-repos_has_issues',
-                 'total_in-his-repos_has_wiki', 'total_in-his-repos_open_issues', 'total_network_count',
-                 'developer_location', 'developer_total_private_repos',
-                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests')
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 
+                 'repo.getCreatedAt', 'repo.getDefaultBranch', 'repo.getDescription',
+                 'repo.getIsFork', 'repo.getForks', 'repo.getForksCount',
+                 'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues',
+                 'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
+                 'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
+                 'developer_login', 'developer_name',
+                 'developer_followers', 'developer_following', 'developer_collaborators',
+                 'developer_company', 'developer_contributions',
+                 'created_at', 'developer_hireable', 'developer_location',
+                 'developer_total_private_repos', 'developer_total_public_repos', 'developer_works_during_bd',
+                 'developers_works_period', 'disk_usage',
+                 'public_gists', 'owned_private_repos', 'total_private_repos')
         devs_head_writer.writerow(tempv)
 
 
@@ -476,131 +459,7 @@ class GeneralGetter(threading.Thread):
     def run(self):
         scream.cout('GeneralGetter starts work...')
         self.finished = False
-        # it is quite reasonable to initiate a display driver for selenium
-        # per one getter, threads work on jobs linear so its the max partition of driver
-        # we can allow, multiple threads working on one virtual display - its without sense
-        #self.initiate_selenium()
-        # now its ok to start retrieving data.. allonsy !
         self.get_data()
-
-    def initiate_selenium(self):
-        scream.say('Initiating selenium...')
-        self.display = Display(visible=0, size=(800, 600))
-        self.display.start()
-        self.browser = webdriver.Firefox()
-        self.browser.implicitly_wait(15)
-        scream.say('Selenium ready for action')
-
-    def analyze_with_selenium(self, repository):
-        result = dict()
-        scream.say('Starting webinterpret for ' + repository.html_url + '..')
-        assert repository is not None
-        url = repository.html_url
-        assert url is not None
-        while True:
-            try:
-                self.browser.set_page_load_timeout(15)
-                self.browser.get(url)
-                scream.say('Data from web retrieved')
-                doc = html.document_fromstring(unicode(self.browser.page_source))
-                scream.log_debug(str(url), True)
-                scream.say('Continue to work on ' + url)
-                scream.say('Page source sent further')
-
-                scream.say('Verify if 404 (repo deleted) otherwise keep on going')
-                parallax = doc.xpath('//div[@id="parallax_illustration"]')
-
-                if (len(parallax) > 0):
-                    scream.say('Verified that 404 (repo deleted)')
-                    result['status'] = '404'
-                    break
-
-                scream.say('Verified that not 404')
-
-                scream.say('Verify if repo empty otherwise keep on going')
-                repo_empty = doc.xpath('//div[@class="blankslate has-fixed-width"]')
-
-                if (len(repo_empty) > 0):
-                    scream.say('Verified that repo is empty')
-                    result['status'] = 'EMPTY'
-                    break
-
-                scream.say('Verified that repo not empty')
-
-                ns = doc.xpath('//ul[@class="numbers-summary"]')
-                sunken = doc.xpath('//ul[@class="sunken-menu-group"]')
-
-                scream.say('XPath made some search for ' + url + ' .. move on to bsoup..')
-                scream.say('Xpath done searching')
-                scream.say('Element found?: ' + str(len(ns) == 1))
-
-                element = ns[0]
-                element_sunken = sunken[0]
-                local_soup = BeautifulSoup(etree.tostring(element))
-                local_soup_sunken = BeautifulSoup(etree.tostring(element_sunken))
-
-                enumarables = local_soup.findAll("li")
-                enumarables_more = local_soup_sunken.findAll("li")
-
-                commits = enumarables[0]
-                scream.say('enumarables[0]')
-                commits_number = analyze_tag(commits.find("span", {"class": "num"}))
-                scream.say('analyze_tag finished execution for commits_number')
-                scream.say('Before parse number: ' + str(commits_number))
-                result['commits'] = parse_number(commits_number)
-                scream.log_debug(result['commits'], True)
-                scream.say('enumarables[1]')
-                branches = enumarables[1]
-                branches_number = analyze_tag(branches.find("span", {"class": "num"}))
-                scream.say('Before parse number: ' + str(branches_number))
-                result['branches'] = parse_number(branches_number)
-                scream.log_debug(result['branches'], True)
-                scream.say('enumarables[2]')
-                releases = enumarables[2]
-                releases_number = analyze_tag(releases.find("span", {"class": "num"}))
-                scream.say('Before parse number: ' + str(releases_number))
-                result['releases'] = parse_number(releases_number)
-                scream.log_debug(result['releases'], True)
-                scream.say('enumarables[3]')
-                contributors = enumarables[3]
-                contributors_number = analyze_tag(contributors.find("span", {"class": "num"}))
-                scream.say('Before parse number: ' + str(contributors_number))
-                result['contributors'] = parse_number(contributors_number)
-                scream.log_debug(result['contributors'], True)
-
-                result['issues'] = 0
-                result['pulls'] = 0
-
-                for enumerable___ in enumarables_more:
-                    if enumerable___["aria-label"] == "Pull Requests":
-                        pulls_tag = enumerable___
-                        pulls_number = analyze_tag(pulls_tag.find("span", {"class": "counter"}))
-                        scream.say('Before parse number: ' + str(pulls_number))
-                        result['pulls'] = parse_number(pulls_number)
-                    elif enumerable___["aria-label"] == "Issues":
-                        issues_tag = enumerable___
-                        issues_number = analyze_tag(issues_tag.find("span", {"class": "counter"}))
-                        scream.say('Before parse number: ' + str(issues_number))
-                        result['issues'] = parse_number(issues_number)
-                
-                result['status'] = 'OK'
-                break
-            except TypeError as ot:
-                scream.say(str(ot))
-                scream.say('Scrambled results (TypeError). Maybe GitHub down. Retry')
-                time.sleep(5.0)
-                if force_raise:
-                    raise
-            except Exception as e:
-                scream.say(str(e))
-                scream.say('No response from selenium. Retry')
-                time.sleep(2.0)
-                if force_raise:
-                    raise
-
-        assert 'status' in result
-        return result
-
 
     def is_finished(self):
         return self.finished if self.finished is not None else False
@@ -610,19 +469,10 @@ class GeneralGetter(threading.Thread):
         self.finished = finished
 
     def cleanup(self):
-        # try:
-        #     self.browser.close()
-        #     self.browser.quit()
-        #     self.display.stop()
-        #     self.display.popen.kill()
-        # except:
-        #     scream.say('Did my best to clean up after selenium and pyvirtualdisplay')
-        #     if force_raise:
-        #         raise
         scream.say('Marking thread on ' + self.repo.getKey() + ' as finished..')
         self.finished = True
-        scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
-        self.terminate()
+        #scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
+        #self.terminate()
 
 
     '''
@@ -644,7 +494,7 @@ class GeneralGetter(threading.Thread):
                 break
             except TypeError as e:
                 scream.log_error('Repo + Contributor TypeError, or paginated through' +
-                                 ' contributors gave error. ' + key + ', error({0})'.
+                                 ' contributors gave error. ' + str(key) + ', error({0})'.
                                  format(str(e)), True)
                 repos_reported_execution_error.write(key + os.linesep)
                 if force_raise:
@@ -690,7 +540,8 @@ class GeneralGetter(threading.Thread):
                         scream.say(str(self.contributor_login))
                         self.repo_contributors.add(self.contributor_login)
                         scream.say(str(self.repo_contributors))
-                        developer_revealed(threading.current_thread(), self.repository, self.repo, self.contributor_object)
+                        #developer_revealed(threading.current_thread(), self.repository, self.repo, self.contributor_object)
+                        developer_revealed(self.threadId, self.repository, self.repo, self.contributor_object)
                         scream.say('Finished revealing developer')
                         break
                     except TypeError as e:
@@ -851,6 +702,9 @@ if __name__ == "__main__":
         threads = []
         thread_id_count = 0
 
+        result_punch_card = open(punch_card__filename__, 'ab', 0)
+        result_punch_card_writer = UnicodeWriter(result_punch_card)
+
         result_writer = UnicodeWriter(result_file)
         while not repos.empty():
             repo = repos.get()
@@ -896,6 +750,30 @@ if __name__ == "__main__":
                     repo.setWatchersCount(repository.watchers_count)  # PyGithub must be joking, this works, watchers_count not
                     scream.say('There are ' + str(repo.getWatchersCount()) + ' watchers.')
                     assert repo.getWatchersCount() is not None
+
+                    scream.say('Getting more properties for the Repository.py object.')
+                    repo.setCreatedAt(repository.created_at)
+                    repo.setDefaultBranch(repository.default_branch)
+                    repo.setDescription(repository.description)
+                    scream.say('Getting more properties for the Repository.py object..')
+                    repo.setIsFork(repository.fork)
+                    repo.setForks(repository.forks)
+                    repo.setForksCount(repository.forks_count)
+                    scream.say('Getting more properties for the Repository.py object...')
+                    repo.setHasDownloads(repository.has_downloads)
+                    repo.setHasWiki(repository.has_wiki)
+                    repo.setHasIssues(repository.has_issues)
+                    #repo.setHasForks(repository.has_forks)
+                    scream.say('Getting more properties for the Repository.py object....')
+                    repo.setLanguage(repository.language)
+                    repo.setMasterBranch(repository.master_branch)
+                    repo.setNetworkCount(repository.network_count)
+                    repo.setOpenedIssues(repository.open_issues)
+                    scream.say('Getting more properties for the Repository.py object.....')
+                    repo.setOrganization(repository.organization.name if repository.organization is not None else '')
+                    repo.setPushedAt(repository.pushed_at)
+                    repo.setUpdatedAt(repository.updated_at)
+
                     # from this line move everything to a thread!
                     scream.say('Create instance of GeneralGetter with ID ' + str(thread_id_count) + ' and token ' + str(current_ghc_desc))
                     scream.log_debug('Make GeneralGetter object', True)
@@ -918,6 +796,9 @@ if __name__ == "__main__":
                 scream.log_warning('Repo with key + ' + key +
                                    ' made exception in API, error({0}): {1}'.
                                    format(e.status, e.data), True)
+                if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                    scream.log_debug("It is now a private repo.. Skip!")
+                    continue
                 repos_reported_execution_error.write(key + os.linesep)
                 freeze(str(e) + ' in the main loop (most top try-catch)')
                 scream.say('Trying again with repo ' + str(key))
