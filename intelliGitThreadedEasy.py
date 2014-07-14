@@ -279,6 +279,7 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
+
 '''
 developer_revealed(repository, repo, contributor, result_writer)
 return nothing, but writes final result row to a csv file
@@ -314,7 +315,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
     developer_works_during_bd = None
     developer_works_period = None
-    tries=5
+    tries = 5
 
     while True:
         try:
@@ -391,11 +392,14 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     else:
         result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()),
 
-                               str(repo.getCreatedAt()), repo.getDefaultBranch(), repo.getDescription(),
+                               str(repo.getCreatedAt()), repo.getDefaultBranch(), repo.getDescription() if repo.getDescription() is not None else '',
                                str(repo.getIsFork()), str(repo.getForks()), str(repo.getForksCount()),
                                str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
-                               str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
-                               str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+                               repo.getLanguage() if repo.getLanguage() is not None else '',
+                               repo.getMasterBranch() if repo.getMasterBranch() is not None else '',
+                               str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
+                               repo.getOrganization() if repo.getOrganization() is not None else '',
+                               str(repo.getPushedAt()), str(repo.getUpdatedAt()),
 
                                developer_login,
                                developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
