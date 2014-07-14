@@ -797,7 +797,7 @@ if __name__ == "__main__":
                                    ' made exception in API, error({0}): {1}'.
                                    format(e.status, e.data), True)
                 if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
-                    scream.log_debug("It is now a private repo.. Skip!")
+                    scream.log_debug("It is now a private repo.. Skip!", True)
                     continue
                 repos_reported_execution_error.write(key + os.linesep)
                 freeze(str(e) + ' in the main loop (most top try-catch)')
