@@ -5,13 +5,15 @@ at one static moment on time (now)
 If you are interested in dymanic data, please visit
 https://github.com/wikiteams/github-data-tools/tree/master/pandas
 
+It uses purely GitHub API, no web scrapping!
+
 @since 1.4.0408
 @author Oskar Jarczyk
 
 @update 1.07.2014
 '''
 
-version_name = 'Version 2.3.S1 codename: Tomato Slim'
+version_name = 'Version 2.5 codename: Pepko:)'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -27,10 +29,6 @@ import os.path
 import sys
 import codecs
 import cStringIO
-from bs4 import BeautifulSoup
-from lxml import html, etree
-from pyvirtualdisplay import Display
-from selenium import webdriver
 import __builtin__
 import socket
 import time
@@ -38,16 +36,16 @@ import threading
 import traceback
 
 '''
-Niezaimplementowane wymiary oraz wyjasnienie czemu nie
+Niezaimplementowane wymiary oraz wyjasnienie
 
 7.  Wplyw na jakosc kodu globalnie i w repo
-    [to jest oddzielnie i implementuje Blazej][generlanie nie wiem jak by to mialo wygladac]
+    [wyciaganie tego odbywa sie w innym projekcie]
 
 10. Ilosc dyskusji pod kodem w repo
     [dyskusje to oddzielny temat badan i watpie by byly latwo dostepne przez skrypty tego typu]
 
 16. Ilosc commitow w rozbiciu na jezyki programowania (skills)
-    [...]
+    [zbyt skomplikowane na ten projekt, ale wyciagam tutaj jezyk repozytorium, wiec narazie wystarczy]
 
 '''
 
@@ -118,6 +116,11 @@ except getopt.GetoptError as err:
     print str(err)  # will print something like "option -a not recognized"
     usage()
     sys.exit(2)
+
+if len(opts) < 2:
+    print 'There were ' + str(len(opts)) + ' arguments provided. Not to little? Check --help for more info.'
+else:
+    print 'There were ' + str(len(opts)) + ' arguments provided.'
 
 for o, a in opts:
     if o in ("-v", "--verbose"):
