@@ -294,9 +294,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     developer_login = contributor.login
     scream.log_debug('Assigning a contributor: ' + str(developer_login) + ' to a repo: ' + str(repository.name), True)
     developer_name = contributor.name
-    # 1 Ilosc osob, ktore dany deweloper followuje [FollowEvent]
+    # 1. Ilosc osob, ktore dany deweloper followuje [FollowEvent]
     developer_followers = contributor.followers
-    # 2 Ilosc osob, ktore followuja dewelopera [FollowEvent]
+    # 2. Ilosc osob, ktore followuja dewelopera [FollowEvent]
     developer_following = contributor.following
 
     developer_location = contributor.location
