@@ -414,6 +414,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                 total_his_open_issues += his_repo.open_issues
                 total_network_count += his_repo.network_count
 
+                # lista kontrybutorow - kto ile dodal/usunal/zacomitowal w tym "pod repozytorium"
                 try:
                     stats = his_repo.get_stats_contributors()
                     for s in stats:
@@ -467,27 +468,43 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
     if not use_utf8:
         result_writer.writerow([str(repo.getUrl()), str(repo.getName()), str(repo.getOwner()),
-                               str(repo.getStargazersCount()), str(repo.getWatchersCount()), str(developer_login),
-                               (str(developer_name) if developer_name is not None else ''), str(developer_followers), str(developer_following),
-                               str(developer_collaborators), (str(company) if company is not None else ''), str(developer_contributions),
-                               str(created_at), (str(hireable) if hireable is not None else ''),
-                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
-                               str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               (str(developer_location) if developer_location is not None else ''),
+                               str(repo.getStargazersCount()), str(repo.getWatchersCount()),
+
+                               str(repo.getCreatedAt()), str(repo.getDefaultBranch()), str(repo.getDescription()),
+                               str(repo.getIsFork()), str(repo.getForks()), str(repo.getForksCount()),
+                               str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
+                               str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
+                               str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               str(developer_login),
+                               str(developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
+                               str(developer_collaborators), str(company if company is not None else ''), str(developer_contributions),
+                               str(created_at), str(hireable if hireable is not None else ''),
+                               str(developer_location if developer_location is not None else ''),
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
+                               str(developer_works_during_bd), str(developer_works_period), str(disk_usage),
+                               str(public_gists), str(owned_private_repos), str(total_private_repos)])
+
     else:
-        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()), developer_login,
-                               (developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
-                               str(developer_collaborators), (company if company is not None else ''), str(developer_contributions),
-                               str(created_at), (str(hireable) if hireable is not None else ''),
-                               str(total_his_repositories), str(total_his_stars), str(total_his_collaborators), str(total_his_contributors),
-                               str(total_his_watchers), str(total_his_forks), str(total_his_has_issues),
-                               str(total_his_has_wiki), str(total_his_open_issues), str(total_network_count),
-                               (developer_location if developer_location is not None else ''),
+        result_writer.writerow([repo.getUrl(), repo.getName(), repo.getOwner(), str(repo.getStargazersCount()), str(repo.getWatchersCount()),
+
+                               str(repo.getCreatedAt()), repo.getDefaultBranch(), repo.getDescription() if repo.getDescription() is not None else '',
+                               str(repo.getIsFork()), str(repo.getForks()), str(repo.getForksCount()),
+                               str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
+                               repo.getLanguage() if repo.getLanguage() is not None else '',
+                               repo.getMasterBranch() if repo.getMasterBranch() is not None else '',
+                               str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
+                               repo.getOrganization() if repo.getOrganization() is not None else '',
+                               str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               developer_login,
+                               developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
+                               str(developer_collaborators), company if company is not None else '', str(developer_contributions),
+                               str(created_at), str(hireable) if hireable is not None else '',
+                               developer_location if developer_location is not None else '',
                                str(developer_total_private_repos), str(developer_total_public_repos),
-                               str(total_his_issues), str(total_his_pull_requests), str(developer_works_during_bd), str(developer_works_period)])
+                               str(developer_works_during_bd), str(developer_works_period), str(disk_usage),
+                               str(public_gists), str(owned_private_repos), str(total_private_repos)])
 
     scream.log_debug('Wrote row to CSV.', True)
 
