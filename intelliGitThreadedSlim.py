@@ -360,24 +360,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         total_his_open_issues = 0
         total_network_count = 0
         total_his_collaborators = 0
-        total_his_contributors = 0
-
-        '''
-        total_his_commits = 0
-        total_his_branches = 0
-        total_his_releases = 0
-        '''
         total_his_issues = 0
         total_his_pull_requests = 0
-
-        '''
-        total_his_commits = 'N/A'
-        total_his_branches = 'N/A'
-        total_his_releases = 'N/A'
-        total_his_issues = 'N/A'
-        total_his_pull_requests = 'N/A'
-        total_his_contributors = 'N/A'
-        '''
 
         '''
         There are couple of statistics cards
@@ -402,6 +386,10 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
             http://developer.github.com/v3/repos/statistics/#get-contributors-list-with-additions-deletions-and-commit-counts
         '''
 
+        # 3.  Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych
+        his_contributors = frozenset()
+        total_his_contributors = 0
+
         try:
             for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
 
@@ -425,6 +413,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                             ad___c += w.c
                             ad___a += w.a
                             ad___d += w.d
+                        if s.author.login not in his_contributors:
+                            his_contributors.add(s.author.login)
                         result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
                                                           str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
                 except GithubException as e:
@@ -445,6 +435,10 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
             his_repositories = contributor.get_repos()
             if force_raise:
                 raise
+
+        total_his_contributors = len(his_contributors)
+
+        break
 
     # Developer company (if any given)
     company = contributor.company
@@ -476,6 +470,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
                                str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
 
+                               str(total_his_contributors),
+
                                str(developer_login),
                                str(developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
                                str(developer_collaborators), str(company if company is not None else ''), str(developer_contributions),
@@ -496,6 +492,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
                                repo.getOrganization() if repo.getOrganization() is not None else '',
                                str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               str(total_his_contributors),
 
                                developer_login,
                                developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
@@ -518,15 +516,20 @@ def freeze(message):
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 'developer_login', 'developer_name',
-                 'developer_followers', 'developer_following', 'developer_collaborators', 'developer_company', 'developer_contributions',
-                 'created_at', 'developer_is_hireable', 'total_his_repositories', 'total_in-his-repos_stars',
-                 'total_in-his-repos_collaborators', 'total_in-his-repos_contributors',
-                 'total_in-his-repos_watchers', 'total_in-his-repos_forks', 'total_in-his-repos_has_issues',
-                 'total_in-his-repos_has_wiki', 'total_in-his-repos_open_issues', 'total_network_count',
-                 'developer_location', 'developer_total_private_repos',
-                 'developer_total_public_repos', 'total_in-his-repos_issues', 'total_in-his-repos_pull_requests',
-                 'developer_works_during_bd', 'developer_works_period')
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 
+                 'repo.getCreatedAt', 'repo.getDefaultBranch', 'repo.getDescription',
+                 'repo.getIsFork', 'repo.getForks', 'repo.getForksCount',
+                 'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues',
+                 'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
+                 'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
+                 'total_his_contributors',
+                 'developer_login', 'developer_name',
+                 'developer_followers', 'developer_following', 'developer_collaborators',
+                 'developer_company', 'developer_contributions',
+                 'created_at', 'developer_hireable', 'developer_location',
+                 'developer_total_private_repos', 'developer_total_public_repos', 'developer_works_during_bd',
+                 'developers_works_period', 'disk_usage',
+                 'public_gists', 'owned_private_repos', 'total_private_repos')
         devs_head_writer.writerow(tempv)
 
 
