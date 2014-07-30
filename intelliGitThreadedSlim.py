@@ -10,10 +10,10 @@ It uses purely GitHub API, no web scrapping!
 @since 1.4.0408
 @author Oskar Jarczyk
 
-@update 1.07.2014
+@update 30.07.2014
 '''
 
-version_name = 'Version 2.5 codename: Pepko:)'
+version_name = 'Version 2.51 codename: PBar'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
