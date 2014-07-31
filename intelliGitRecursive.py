@@ -5,13 +5,15 @@ at one static moment on time (now)
 If you are interested in dymanic data, please visit
 https://github.com/wikiteams/github-data-tools/tree/master/pandas
 
-@since 1.4.0705
+It uses purely GitHub API, no web scrapping!
+
+@since 1.4.0408
 @author Oskar Jarczyk
 
-@update 5.07.2014
+@update 30.07.2014
 '''
 
-version_name = 'Version 2.4L codename: Lightweight'
+version_name = 'Version 2.51 codename: PBar'
 
 from intelliRepository import MyRepository
 from github import Github, UnknownObjectException, GithubException
@@ -38,19 +40,17 @@ import subprocess
 Niezaimplementowane wymiary oraz wyjasnienie
 
 7.  Wplyw na jakosc kodu globalnie i w repo
-    [to jest oddzielnie i implementuje Blazej][generlanie nie wiem jak by to mialo wygladac]
+    [Zostalo to przeniesione do innego projektu]
 
 10. Ilosc dyskusji pod kodem w repo
-    [dyskusje to oddzielny temat badan i watpie by byly latwo dostepne przez skrypty tego typu]
+    [Jest to czescia projektu nlp-brat, ale tutaj ew. mozna wyciagnac ilosc komentarzy]
 
 16. Ilosc commitow w rozbiciu na jezyki programowania (skills)
-    [...]
-
+    [Uproszczone do jezyku programowania podanego w opisie repozytorium]
 
 '''
 
-count___ = 'selenium'
-result_filename__ = 'developers_revealed_from_top_s.csv'
+result_filename__ = 'developers_revealed_from_top.csv'
 punch_card__filename__ = 'developers_revealed_punch_card.csv'
 
 
@@ -279,7 +279,6 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
-
 '''
 developer_revealed(repository, repo, contributor, result_writer)
 return nothing, but writes final result row to a csv file
@@ -309,7 +308,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     developer_contributions = contributor.contributions
 
     # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
-    # his_repositories = contributor.get_repos()
+    his_repositories = contributor.get_repos()
 
     # 17. Czy commituje w godzinach pracy (zaleznie od strefy czasowej)?
     scream.log_debug("Starting to analyze OSRC card for user: " + str(developer_login), True)
@@ -350,6 +349,96 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                 developer_works_period = 0
                 break
 
+    while True:
+        total_his_repositories = 0
+        total_his_stars = 0
+        total_his_watchers = 0
+        total_his_forks = 0
+        total_his_has_issues = 0
+        total_his_has_wiki = 0
+        total_his_open_issues = 0
+        total_network_count = 0
+        total_his_collaborators = 0
+        total_his_issues = 0
+        total_his_pull_requests = 0
+
+        '''
+        There are couple of statistics cards
+        def get_stats_punch_card(self):
+            (Get the number of commits per hour in each day)
+            http://developer.github.com/v3/repos/statistics/#get-the-number-of-commits-per-hour-in-each-day
+
+        def get_stats_participation(self):
+            (Get the weekly commit count for the repo owner and everyone else)
+            http://developer.github.com/v3/repos/statistics/#get-the-weekly-commit-count-for-the-repo-owner-and-everyone-else
+
+        def get_stats_code_frequency(self):
+            (Get the number of additions and deletions per week)
+            http://developer.github.com/v3/repos/statistics/#get-the-number-of-additions-and-deletions-per-week
+
+        def get_stats_commit_activity(self):
+            (Get the number of commits per hour in each day)
+            developer.github.com/v3/repos/statistics/#get-the-number-of-commits-per-hour-in-each-day
+
+        def get_stats_contributors(self):
+            (Get contributor list with additions deletions and commit counts)
+            http://developer.github.com/v3/repos/statistics/#get-contributors-list-with-additions-deletions-and-commit-counts
+        '''
+
+        # 3.  Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych
+        his_contributors = frozenset()
+        total_his_contributors = 0
+
+        try:
+            for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
+
+                total_his_repositories += 1
+                total_his_forks += his_repo.forks_count
+                total_his_stars += his_repo.stargazers_count
+                total_his_watchers += his_repo.watchers_count
+                total_his_has_issues += 1 if his_repo.has_issues else 0
+                total_his_has_wiki += 1 if his_repo.has_wiki else 0
+                total_his_open_issues += his_repo.open_issues
+                total_network_count += his_repo.network_count
+
+                # lista kontrybutorow - kto ile dodal/usunal/zacomitowal w tym "pod repozytorium"
+                try:
+                    stats = his_repo.get_stats_contributors()
+                    for s in stats:
+                        ad___c = 0
+                        ad___a = 0
+                        ad___d = 0
+                        for w in s.weeks:
+                            ad___c += w.c
+                            ad___a += w.a
+                            ad___d += w.d
+                        if s.author.login not in his_contributors:
+                            his_contributors.add(s.author.login)
+                        result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
+                                                          str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
+                except GithubException as e:
+                    freeze(str(e) + ' in try per repo of x-dev repos')
+                    if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                        scream.log_debug("It is a private repo.. Skip!")
+                        continue
+                    if force_raise:
+                        raise
+                except Exception as e:
+                    freeze(str(e) + ' in try per repo of x-dev repos')
+                    # probably punch card not ready
+                    if force_raise:
+                        raise
+            break
+        except Exception as e:
+            freeze(str(e) + ' in main loop of developer_revealed()')
+            his_repositories = contributor.get_repos()
+            if force_raise:
+                raise
+
+        total_his_contributors = len(his_contributors)
+
+        break
+
     # Developer company (if any given)
     company = contributor.company
     created_at = contributor.created_at
@@ -361,7 +450,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     owned_private_repos = contributor.owned_private_repos
     total_private_repos = contributor.total_private_repos
 
-    scream.log_debug('Thread ' + str(thread_getter_instance) +
+    scream.log_debug('Thread ' + str(thread_getter_instance.threadId) +
                      ' Finished revealing contributor: ' + str(developer_login) + ' in a repo: ' + str(repository.name), True)
 
     if show_trace:
@@ -379,6 +468,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
                                str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
                                str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               str(total_his_contributors),
 
                                str(developer_login),
                                str(developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -400,6 +491,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
                                repo.getOrganization() if repo.getOrganization() is not None else '',
                                str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+
+                               str(total_his_contributors),
 
                                developer_login,
                                developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
@@ -428,6 +521,7 @@ def make_headers(filename_for_headers):
                  'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues',
                  'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
                  'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
+                 'total_his_contributors',
                  'developer_login', 'developer_name',
                  'developer_followers', 'developer_following', 'developer_collaborators',
                  'developer_company', 'developer_contributions',
@@ -457,7 +551,7 @@ class GeneralGetter(threading.Thread):
         self.github_client = github_client
 
     def run(self):
-        scream.cout('GeneralGetter starts work...')
+        scream.cout('GeneralGetter thread(' + str(self.threadId) + ')' + 'starts working on ...' + self.repository.html_url)
         self.finished = False
         self.get_data()
 
@@ -471,8 +565,8 @@ class GeneralGetter(threading.Thread):
     def cleanup(self):
         scream.say('Marking thread on ' + self.repo.getKey() + ' as finished..')
         self.finished = True
-        #scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
-        #self.terminate()
+        scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
+        self.terminate()
 
 
     '''
@@ -494,7 +588,7 @@ class GeneralGetter(threading.Thread):
                 break
             except TypeError as e:
                 scream.log_error('Repo + Contributor TypeError, or paginated through' +
-                                 ' contributors gave error. ' + str(key) + ', error({0})'.
+                                 ' contributors gave error. ' + key + ', error({0})'.
                                  format(str(e)), True)
                 repos_reported_execution_error.write(key + os.linesep)
                 if force_raise:
@@ -533,7 +627,7 @@ class GeneralGetter(threading.Thread):
             for contributor in self.contributors_static.items():
                 scream.log_debug('move with contributor to next from contributors_static.items()', True)
                 while True:
-                    scream.say('Inside while True: (line 674)')
+                    scream.say('Inside while True: (line 630)')
                     try:
                         self.contributor_login = contributor[0]
                         self.contributor_object = contributor[1]
@@ -741,8 +835,10 @@ if __name__ == "__main__":
                     scream.say('Working at the moment on repo: ' + str(repo.getKey()))
                     current_ghc = github_clients[num_modulo(thread_id_count)]
                     current_ghc_desc = github_clients_ids[num_modulo(thread_id_count)]
+
                     repository = current_ghc.get_repo(repo.getKey())
                     scream.log_debug('Got a repository from API', True)
+
                     repo.setRepoObject(repository)
                     repo.setStargazersCount(repository.stargazers_count)
                     scream.say('There are ' + str(repo.getStargazersCount()) + ' stargazers.')
