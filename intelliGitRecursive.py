@@ -20,7 +20,7 @@ from github import Github, UnknownObjectException, GithubException
 import urllib2
 import json
 import csv
-from Queue import Queue
+from collections import deque
 import getopt
 import scream
 import gc
@@ -78,6 +78,11 @@ show_trace = False
 
 result_writer = None
 result_punch_card_writer = None
+
+begin_arg = None
+end_arg = None
+beginp_arg = None
+endp_arg = None
 
 
 def parse_number(s):
@@ -183,7 +188,7 @@ for o, a in opts:
         result_filename__ = 'developers_revealed_from_bottom_s.csv'
         scream.ssay('Queue will be reversed, program will start from end ' + str(reverse_queue))
 
-repos = Queue()
+repos = deque()
 
 '''
 Explanation of an input data, theye are CSV file with data
@@ -724,6 +729,20 @@ def num_modulo(thread_id_count__):
     return thread_id_count__ % no_of_threads
 
 
+# queue will be an instance of collection.deque class
+def slice_queue(queue, begin_arg, end_arg, percentage=False):
+    scream.log_warning("Slicing the dequeue, percentage=" + str(percentage), True)
+    if percentage:
+        begin_arg = int( str( len(queue) * begin_arg ) )
+        end_arg = int( str( len(queue) * end_arg ) )
+        # percentage threshold
+    right_index = len(queue) - end_arg
+    for i in xrange(1, begin_arg):
+        queue.popleft()
+    for x in xrange(1, right_index):
+        queue.pop()
+
+
 if __name__ == "__main__":
     '''
     Starts process of work on CSV files which are output of Google Bigquery
@@ -809,23 +828,32 @@ if __name__ == "__main__":
                 scream.log('We already found rep ' + key +
                            ' in the dictionary..')
             else:
-                repos.put(repo)
+                repos.append(repo)
                 previous = key
 
     scream.say('Finished creating queue, size of fifo construct is: ' +
-               str(repos.qsize()))
+               str(len(repos)))
 
     iteration_step_count = 1
 
     if not os.path.isfile(result_filename__):
         make_headers(result_filename__)
 
+    # this one was old :)
+    # if reverse_queue:
+    #     aux_stack = Stack()
+    #     while not repos.empty():
+    #         aux_stack.push(repos.get())
+    #     while not aux_stack.isEmpty():
+    #         repos.put(aux_stack.pop())
     if reverse_queue:
-        aux_stack = Stack()
-        while not repos.empty():
-            aux_stack.push(repos.get())
-        while not aux_stack.isEmpty():
-            repos.put(aux_stack.pop())
+        repos.reverse()
+
+    if (begin_arg is not None) or (beginp_arg is not None):
+        if beginp_arg is not None:
+            repos = slice_queue(repos, int(beginp_arg), int(endp_arg), True)
+        else:
+            slice_queue(repos, int(begin_arg), int(end_arg))
 
     with open(result_filename__, 'ab', 0) as result_file:
         threads = []
@@ -836,7 +864,7 @@ if __name__ == "__main__":
 
         result_writer = UnicodeWriter(result_file)
         while not repos.empty():
-            repo = repos.get()
+            repo = repos.pop()
             key = repo.getKey()
 
             # resume on repo is implemented, just provide parameters in argvs

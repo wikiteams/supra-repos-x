@@ -1,6 +1,3 @@
 PyGithub
-lxml
-BeautifulSoup4
-pyvirtualdisplay
-selenium
 termcolor
+win32con

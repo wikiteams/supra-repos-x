@@ -2,7 +2,7 @@ import sys
 import logging
 import logging.config
 from termcolor import colored
-import fcntl
+import portalocker
 
 DISABLE__STD = False
 
@@ -29,20 +29,15 @@ def cout(s):
 
 def progress_bar(s, current, left):
     with open('progress_bar.lock', 'w') as lockfile:
-        fcntl.flock(lockfile, fcntl.LOCK_EX)
+        portalocker.lock(lockfile, portalocker.LOCK_EX)
         progress = 1600 * (current/left)
         lockfile.write('[{0}] {1}%'.format('#' * (progress / 40), progress * 1600 * 100))
-        fcntl.flock(lockfile, fcntl.LOCK_UN)
+        portalocker.unlock(lockfile)
 
 
-def ssay(s):
-    if intelliTag_verbose:
-        print colored(str(s), 'green')
-        logger.info(str(s))
-
-
-def ssay(s, current, left):
-    progress_bar(current, left)
+def ssay(s, current=None, left=None):
+    if current is not None:
+        progress_bar(current, left)
     if intelliTag_verbose:
         print colored(str(s), 'green')
         logger.info(str(s))
