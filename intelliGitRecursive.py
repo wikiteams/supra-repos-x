@@ -110,7 +110,7 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], "ht:u:r:s:e:vx:z:qim:j:d:y", ["help", "tokens=",
                                "utf8=", "resume=", "resumestage=", "entity=", "verbose",
                                "threads=", "timeout=", "reverse", "intelli", "safemargin=",
-                               "sleep=", "fraise=", "trace", "resumeinclusive"])
+                               "sleep=", "fraise=", "trace", "resumeinclusive", "begin=", "end=", "beginp=", "endp="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err)  # will print something like "option -a not recognized"
@@ -166,6 +166,18 @@ for o, a in opts:
     elif o in ("-e", "--entity"):
         resume_entity = a
         scream.ssay('Resume on stage with entity ' + str(resume_entity))
+    elif o in ("--begin"):
+        begin_arg = a
+        scream.ssay('Start range for program execution is at number: ' + str(a))
+    elif o in ("--end"):
+        end_arg = a
+        scream.ssay('End range for program execution is at number: ' + str(a))
+    elif o in ("--beginp"):
+        beginp_arg = a
+        scream.ssay('Start range for program execution is at percentage: ' + str(a))
+    elif o in ("--endp"):
+        endp_arg = a
+        scream.ssay('End range for program execution is at percentage: ' + str(a))
     elif o in ("-q", "--reverse"):
         reverse_queue = (a not in ['false', 'False'])
         result_filename__ = 'developers_revealed_from_bottom_s.csv'
