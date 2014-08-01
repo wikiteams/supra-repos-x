@@ -54,3 +54,6 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+pass.txt
+mail_pass.txt
+pass-mainset.txt
