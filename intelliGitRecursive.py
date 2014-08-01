@@ -279,6 +279,7 @@ class UnicodeWriter:
         for row in rows:
             self.writerow(row)
 
+
 '''
 developer_revealed(repository, repo, contributor, result_writer)
 return nothing, but writes final result row to a csv file
@@ -302,9 +303,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     developer_total_private_repos = contributor.total_private_repos
     developer_total_public_repos = contributor.public_repos
 
-    # 5.  Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
+    # 5a.  Ilosc repo, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     developer_collaborators = contributor.collaborators
-    # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+    # 6a.  Ilosc repo, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     developer_contributions = contributor.contributions
 
     # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
@@ -389,6 +390,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         his_contributors = frozenset()
         total_his_contributors = 0
 
+        self_collaborating = 0
+        self_contributing = 0
+
         try:
             for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
 
@@ -428,6 +432,18 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                     # probably punch card not ready
                     if force_raise:
                         raise
+
+                # 6. Ilosc repo, ktorych nie tworzyl, w ktorych jest deweloperem
+                if developer_login in his_contributors:
+                    self_contributing += 1
+
+                # 5. Ilosc repo, ktorych nie tworzyl, w ktorych jest team member
+                subrepo_collaborators = his_repo.get_collaborators()
+                for collaborator in subrepo_collaborators:
+                    total_his_collaborators += 1
+                    if developer_login == collaborator.login:
+                        self_collaborating += 1
+
             break
         except Exception as e:
             freeze(str(e) + ' in main loop of developer_revealed()')
@@ -436,6 +452,13 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                 raise
 
         total_his_contributors = len(his_contributors)
+
+        # 5.  Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
+        # tutaj od wartosci developer_collaborators wystarczy odjac wystapienia loginu w podrepo.get_collaborators()
+        developer_foreign_collaborators = developer_collaborators - self_collaborating
+        # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+        # tutaj od wartosci developer_contributions wystarczy odjac wystapienia loginu w podrepo.get_contributions()
+        developer_foreign_contributions = developer_contributions - self_contributing
 
         break
 
@@ -469,7 +492,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
                                str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
 
-                               str(total_his_contributors),
+                               str(total_his_contributors), str(total_his_collaborators),
 
                                str(developer_login),
                                str(developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -492,7 +515,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                repo.getOrganization() if repo.getOrganization() is not None else '',
                                str(repo.getPushedAt()), str(repo.getUpdatedAt()),
 
-                               str(total_his_contributors),
+                               str(total_his_contributors), str(total_his_collaborators),
 
                                developer_login,
                                developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
@@ -515,13 +538,13 @@ def freeze(message):
 def make_headers(filename_for_headers):
     with open(filename_for_headers, 'ab') as output_csvfile:
         devs_head_writer = UnicodeWriter(output_csvfile) if use_utf8 else csv.writer(output_csvfile, dialect=WriterDialect)
-        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count', 
+        tempv = ('repo_url', 'repo_name', 'repo_owner', 'stargazers_count', 'watchers_count',
                  'repo.getCreatedAt', 'repo.getDefaultBranch', 'repo.getDescription',
                  'repo.getIsFork', 'repo.getForks', 'repo.getForksCount',
                  'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues',
                  'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
                  'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
-                 'total_his_contributors',
+                 'total_his_contributors', 'total_his_collaborators',
                  'developer_login', 'developer_name',
                  'developer_followers', 'developer_following', 'developer_collaborators',
                  'developer_company', 'developer_contributions',
