@@ -863,7 +863,7 @@ if __name__ == "__main__":
         result_punch_card_writer = UnicodeWriter(result_punch_card)
 
         result_writer = UnicodeWriter(result_file)
-        while not repos.empty():
+        while len(repos) > 0:
             repo = repos.pop()
             key = repo.getKey()
 
