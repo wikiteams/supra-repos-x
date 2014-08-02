@@ -85,6 +85,10 @@ beginp_arg = None
 endp_arg = None
 
 
+def is_win():
+    return sys.platform.startswith('win')
+
+
 def parse_number(s):
     return int(float(s))
 
@@ -352,7 +356,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
             count_nwh__ += sum(time_of_activity_per_hours[i] for i in range(18, 24))
             developer_works_during_bd = True if count_bd__ >= count_nwh__ else False
             scream.log_debug('Running C program...', True)
-            args___ = ['./hist_block'] + [str(x) for x in time_of_activity_per_hours]
+            args___ = ['hist_block.exe' if is_win() else './hist_block'] + [str(x) for x in time_of_activity_per_hours]
             developer_works_period = subprocess.Popen(args___, stdout=subprocess.PIPE).stdout.read()
             # -----------------------------------------------------------------------
             scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
@@ -404,7 +408,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         '''
 
         # 3.  Ilosc deweloperow, ktorzy sa w projektach przez niego utworzonych
-        his_contributors = frozenset()
+        his_contributors = set()
         total_his_contributors = 0
 
         self_collaborating = 0
@@ -490,7 +494,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
     owned_private_repos = contributor.owned_private_repos
     total_private_repos = contributor.total_private_repos
 
-    scream.log_debug('Thread ' + str(thread_getter_instance.threadId) +
+    scream.log_debug('Thread ' + str(thread_getter_instance) +
                      ' Finished revealing contributor: ' + str(developer_login) + ' in a repo: ' + str(repository.name), True)
 
     if show_trace:
@@ -654,7 +658,7 @@ class GeneralGetter(threading.Thread):
     def get_data(self):
         global resume_stage
 
-        scream.say('Executing inside-thread method get_data() for: ' + str(self.threadId))
+        scream.say('Preparing to build list of programmers: ' + str(self.threadId))
         if resume_stage in [None, 'contributors']:
             #try:
             scream.ssay('Checking size of a ' + str(self.repo.getKey()) + ' team')
@@ -667,7 +671,7 @@ class GeneralGetter(threading.Thread):
             for contributor in self.contributors_static.items():
                 scream.log_debug('move with contributor to next from contributors_static.items()', True)
                 while True:
-                    scream.say('Inside while True: (line 630)')
+                    scream.say('Get details for a contributor..')
                     try:
                         self.contributor_login = contributor[0]
                         self.contributor_object = contributor[1]
