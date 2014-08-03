@@ -485,7 +485,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                 freeze(str(e) + ' his_repo.get_stats_contributors(). Unexpected error with getting stats.')
                                 if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
                                     scream.log_debug("It is a private repo.. Skip!")
-                                    continue
+                                    break
                                 if force_raise:
                                     raise
                             except TypeError as e:
