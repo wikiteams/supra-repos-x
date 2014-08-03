@@ -365,7 +365,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
             # req = urllib2.Request(osrc_url, headers=hdr) 
             # response = urllib2.urlopen(req)
             # thus i moved to requests library
-            proxy = {'http': '199.200.120.140:8089'}
+            proxy = {'http': '184.105.239.95:8080'}
             session_osrc = requests.Session()
             requests_osrc = session_osrc.get(osrc_url, proxies=proxy)
             data = json.loads(requests_osrc.text)
@@ -678,8 +678,8 @@ class GeneralGetter(threading.Thread):
     def cleanup(self):
         scream.say('Marking thread on ' + self.repo.getKey() + ' as finished..')
         self.finished = True
-        scream.say('Terminating thread on ' + self.repo.getKey() + ' ...')
-        self.terminate()
+        scream.say('Terminating/join() thread on ' + self.repo.getKey() + ' ...')
+        #self.join()
 
 
     '''
