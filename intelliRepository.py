@@ -40,6 +40,7 @@ class MyRepository():
     repository_owner = None
     repository_private = None
     repository_pulls = None
+    repository_pulls_count = None
     repository_pushed_at = None
     repository_updated_at = None
     repository_size = None
@@ -265,11 +266,14 @@ class MyRepository():
     def setPulls(self, pulls):
         self.repository_pulls = pulls
 
+    def setPullsCount(self, repository_pulls_count):
+        self.repository_pulls_count = repository_pulls_count
+
     def getPulls(self):
         return self.repository_pulls
 
     def getPullsCount(self):
-        return (len(self.repository_pulls) if self.repository_pulls is not None else 0)
+        return self.repository_pulls_count
 
     def getLanguages(self):
         return self.repository_language

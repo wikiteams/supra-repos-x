@@ -27,7 +27,7 @@ def cout(s):
         print str(s)
 
 
-def progress_bar(s, current, left):
+def progress_bar(current, left):
     with open('progress_bar.lock', 'w') as lockfile:
         portalocker.lock(lockfile, portalocker.LOCK_EX)
         progress = 1600 * (current/left)
@@ -36,6 +36,11 @@ def progress_bar(s, current, left):
 
 
 def ssay(s, current=None, left=None):
+    if type(current) is str:
+        current = int(current)
+    if type(left) is str:
+        left = int(left)
+
     if current is not None:
         progress_bar(current, left)
     if intelliTag_verbose:

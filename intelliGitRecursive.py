@@ -93,6 +93,14 @@ def parse_number(s):
     return int(float(s))
 
 
+def diff(first_arg, second_arg):
+    if type(first_arg) is str:
+        first_arg = int(first_arg)
+    if type(second_arg) is str:
+        second_arg = int(second_arg)
+    return first_arg - second_arg
+
+
 def is_number(s):
     try:
         float(s)  # for int, long and float
@@ -326,8 +334,10 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
     # 5a.  Ilosc repo, w ktorych jest team member [TeamAddEvent] [MemberEvent]
     developer_collaborators = contributor.collaborators
+    scream.say('Developer collaborators count is: ' + str(developer_collaborators))
     # 6a.  Ilosc repo, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
     developer_contributions = contributor.contributions
+    scream.say('Developer contributions count is: ' + str(developer_contributions))
 
     # his_repositories - Ilosc projektow przez niego utworzonych / ktorych jest wlascicielem
     his_repositories = contributor.get_repos()
@@ -384,6 +394,9 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         total_his_issues = 0
         total_his_pull_requests = 0
 
+        developer_foreign_collaborators = 0
+        developer_foreign_contributions = 0
+
         '''
         There are couple of statistics cards
         def get_stats_punch_card(self):
@@ -417,71 +430,103 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
         try:
             for his_repo in his_repositories:  # iteracja po repozytoriach ktorych jest wlascicielem
 
-                total_his_repositories += 1
-                total_his_forks += his_repo.forks_count
-                total_his_stars += his_repo.stargazers_count
-                total_his_watchers += his_repo.watchers_count
-                total_his_has_issues += 1 if his_repo.has_issues else 0
-                total_his_has_wiki += 1 if his_repo.has_wiki else 0
-                total_his_open_issues += his_repo.open_issues
-                total_network_count += his_repo.network_count
+                while True:
+                    try:
+                        total_his_repositories += 1
+                        total_his_forks += his_repo.forks_count
+                        total_his_stars += his_repo.stargazers_count
+                        total_his_watchers += his_repo.watchers_count
+                        total_his_has_issues += 1 if his_repo.has_issues else 0
+                        total_his_has_wiki += 1 if his_repo.has_wiki else 0
+                        total_his_open_issues += his_repo.open_issues
+                        total_network_count += his_repo.network_count
+                        total_his_issues += his_repo.open_issues_count
+                        scream.ssay('Counting the subrepo pulls for the ' + str(his_repo.name))
+                        total_his_pull_requests += len(list(his_repo.get_pulls()))
 
-                # lista kontrybutorow - kto ile dodal/usunal/zacomitowal w tym "pod repozytorium"
-                try:
-                    stats = his_repo.get_stats_contributors()
-                    for s in stats:
-                        ad___c = 0
-                        ad___a = 0
-                        ad___d = 0
-                        for w in s.weeks:
-                            ad___c += w.c
-                            ad___a += w.a
-                            ad___d += w.d
-                        if s.author.login not in his_contributors:
-                            his_contributors.add(s.author.login)
-                        result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
-                                                          str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
-                except GithubException as e:
-                    freeze(str(e) + ' in try per repo of x-dev repos')
-                    if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
-                        scream.log_debug("It is a private repo.. Skip!")
-                        continue
-                    if force_raise:
-                        raise
-                except Exception as e:
-                    freeze(str(e) + ' in try per repo of x-dev repos')
-                    # probably punch card not ready
-                    if force_raise:
-                        raise
+                        # lista kontrybutorow - kto ile dodal/usunal/zacomitowal w tym "pod repozytorium"
+                        while True:
+                            try:
+                                stats = his_repo.get_stats_contributors()
+                                for s in stats:
+                                    ad___c = 0
+                                    ad___a = 0
+                                    ad___d = 0
+                                    for w in s.weeks:
+                                        ad___c += w.c
+                                        ad___a += w.a
+                                        ad___d += w.d
+                                    if s.author.login not in his_contributors:
+                                        his_contributors.add(s.author.login)
+                                    result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
+                                                                      str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
+                                break
+                            except GithubException as e:
+                                freeze(str(e) + ' his_repo.get_stats_contributors(). Unexpected error with getting stats.')
+                                if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                                    scream.log_debug("It is a private repo.. Skip!")
+                                    continue
+                                if force_raise:
+                                    raise
+                            except TypeError as e:
+                                freeze(str(e) + ' his_repo.get_stats_contributors(). Punch-card not ready?')
+                                # probably punch card not ready
+                                if force_raise:
+                                    raise
+                            except Exception as e:
+                                freeze(str(e) + ' his_repo.get_stats_contributors(). Punch-card not ready?')
+                                # probably punch card not ready
+                                if force_raise:
+                                    raise
 
-                # 6. Ilosc repo, ktorych nie tworzyl, w ktorych jest deweloperem
-                if developer_login in his_contributors:
-                    self_contributing += 1
+                        # 6. Ilosc repo, ktorych nie tworzyl, w ktorych jest deweloperem
+                        if developer_login in his_contributors:
+                            self_contributing += 1
 
-                # 5. Ilosc repo, ktorych nie tworzyl, w ktorych jest team member
-                subrepo_collaborators = his_repo.get_collaborators()
-                for collaborator in subrepo_collaborators:
-                    total_his_collaborators += 1
-                    if developer_login == collaborator.login:
-                        self_collaborating += 1
+                        # 5. Ilosc repo, ktorych nie tworzyl, w ktorych jest team member
+                        subrepo_collaborators = his_repo.get_collaborators()
+                        for collaborator in subrepo_collaborators:
+                            total_his_collaborators += 1
+                            if developer_login == collaborator.login:
+                                self_collaborating += 1
 
+                        # All elements paginated through his_repositories, thus we can safely break loop
+                        break
+                    except GithubException as e:
+                        freeze('While getting subrepo details, ' + str(e) + ' in element his_repo in his_repositories')
+                        if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
+                            scream.log_debug("It is a private repo.. Skip!")
+                            continue
+                        if force_raise:
+                            raise
+                    except TypeError as e:
+                        freeze('While getting subrepo details, ' + str(e) + ' in element his_repo in his_repositories. Quota depleted?')
+                        # probably punch card not ready
+                        if force_raise:
+                            raise
+                    except Exception as e:
+                        freeze('While getting subrepo details, ' + str(e) + ' in element his_repo in his_repositories. Quota depleted?')
+                        # probably punch card not ready
+                        if force_raise:
+                            raise
+
+            total_his_contributors = len(his_contributors)
+
+            # 5.  Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
+            # tutaj od wartosci developer_collaborators wystarczy odjac wystapienia loginu w podrepo.get_collaborators()
+            developer_foreign_collaborators = (developer_collaborators if developer_collaborators is not None else 0) - self_collaborating
+            # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
+            # tutaj od wartosci developer_contributions wystarczy odjac wystapienia loginu w podrepo.get_contributions()
+            developer_foreign_contributions = developer_contributions - self_contributing
+
+            # All properties checked for a dev, thus we can safely break loop
             break
+
         except Exception as e:
-            freeze(str(e) + ' in main loop of developer_revealed()')
+            freeze('Error ' + str(e) + ' in for his_repo in his_repositories loop. Will start the subrepo analysis from the beginning.')
             his_repositories = contributor.get_repos()
             if force_raise:
                 raise
-
-        total_his_contributors = len(his_contributors)
-
-        # 5.  Ilosc repo, ktorych nie tworzyl, w ktorych jest team member [TeamAddEvent] [MemberEvent]
-        # tutaj od wartosci developer_collaborators wystarczy odjac wystapienia loginu w podrepo.get_collaborators()
-        developer_foreign_collaborators = developer_collaborators - self_collaborating
-        # 6.  Ilosc repo, ktorych nie tworzyl, w ktorych jest contributorem [PushEvent] [IssuesEvent] [PullRequestEvent] [GollumEvent]
-        # tutaj od wartosci developer_contributions wystarczy odjac wystapienia loginu w podrepo.get_contributions()
-        developer_foreign_contributions = developer_contributions - self_contributing
-
-        break
 
     # Developer company (if any given)
     company = contributor.company
@@ -511,9 +556,10 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                str(repo.getIsFork()), str(repo.getForks()), str(repo.getForksCount()),
                                str(repo.getHasDownloads()), str(repo.getHasWiki()), str(repo.getHasIssues()),
                                str(repo.getLanguage()), str(repo.getMasterBranch()), str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
-                               str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+                               str(repo.getOrganization()), str(repo.getPushedAt()), str(repo.getUpdatedAt()), str(repo.getPullsCount()),
 
-                               str(total_his_contributors), str(total_his_collaborators),
+                               str(total_his_contributors), str(total_his_collaborators), str(developer_foreign_collaborators),
+                               str(developer_foreign_contributions), str(total_his_issues), str(total_his_pull_requests),
 
                                str(developer_login),
                                str(developer_name if developer_name is not None else ''), str(developer_followers), str(developer_following),
@@ -534,9 +580,10 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                repo.getMasterBranch() if repo.getMasterBranch() is not None else '',
                                str(repo.getNetworkCount()), str(repo.getOpenedIssues()),
                                repo.getOrganization() if repo.getOrganization() is not None else '',
-                               str(repo.getPushedAt()), str(repo.getUpdatedAt()),
+                               str(repo.getPushedAt()), str(repo.getUpdatedAt()), str(repo.getPullsCount()),
 
-                               str(total_his_contributors), str(total_his_collaborators),
+                               str(total_his_contributors), str(total_his_collaborators), str(developer_foreign_collaborators),
+                               str(developer_foreign_contributions), str(total_his_issues), str(total_his_pull_requests),
 
                                developer_login,
                                developer_name if developer_name is not None else '', str(developer_followers), str(developer_following),
@@ -552,7 +599,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
 def freeze(message):
     global sleepy_head_time
-    scream.say('Sleeping for ' + str(sleepy_head_time) + ' seconds. Reason: ' + str(message))
+    scream.log_warning('Sleeping for ' + str(sleepy_head_time) + ' seconds. Reason: ' + str(message), True)
     time.sleep(sleepy_head_time)
 
 
@@ -564,8 +611,9 @@ def make_headers(filename_for_headers):
                  'repo.getIsFork', 'repo.getForks', 'repo.getForksCount',
                  'repo.getHasDownloads', 'repo.getHasWiki', 'repo.getHasIssues',
                  'repo.getLanguage', 'repo.getMasterBranch', 'repo.getNetworkCount', 'repo.getOpenedIssues',
-                 'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt',
-                 'total_his_contributors', 'total_his_collaborators',
+                 'repo.getOrganization', 'repo.getPushedAt', 'repo.getUpdatedAt', 'repo.getPullsCount',
+                 'total_his_contributors', 'total_his_collaborators', 'developer_foreign_collaborators',
+                 'developer_foreign_contributions', 'total_his_issues', 'total_his_pull_requests',
                  'developer_login', 'developer_name',
                  'developer_followers', 'developer_following', 'developer_collaborators',
                  'developer_company', 'developer_contributions',
@@ -631,22 +679,21 @@ class GeneralGetter(threading.Thread):
                     result_set[contributor.login] = contributor
                 break
             except TypeError as e:
-                scream.log_error('Repo + Contributor TypeError, or paginated through' +
-                                 ' contributors gave error. ' + key + ', error({0})'.
+                scream.log_error('Building list of programmers TypeError. ' + key + ', error({0})'.
                                  format(str(e)), True)
                 repos_reported_execution_error.write(key + os.linesep)
                 if force_raise:
                     raise
                 #break
             except socket.timeout as e:
-                scream.log_error('Timeout while revealing details.. ' +
+                scream.log_error('Building list of programmers socket timeout.. ' +
                                  ', error({0})'.format(str(e)), True)
                 freeze('build_list_of_programmers will retry')
                 if force_raise:
                     raise
                 #break
             except Exception as e:
-                scream.log_error('Exception while revealing details.. ' +
+                scream.log_error('Exception while building list of programmers .. ' +
                                  ', error({0})'.format(str(e)), True)
                 freeze('build_list_of_programmers will retry')
                 if force_raise:
@@ -914,6 +961,9 @@ if __name__ == "__main__":
                     scream.say('There are ' + str(repo.getWatchersCount()) + ' watchers.')
                     assert repo.getWatchersCount() is not None
 
+                    scream.ssay('Counting the repo pulls for the ' + str(repo.getKey()))
+                    repo.setPullsCount(len(list(repository.get_pulls())))
+
                     scream.say('Getting more properties for the Repository.py object.')
                     repo.setCreatedAt(repository.created_at)
                     repo.setDefaultBranch(repository.default_branch)
@@ -998,7 +1048,7 @@ if __name__ == "__main__":
 
             scream.say('Inviting new thread to the pool...')
 
-            scream.ssay('Finished processing repo: ' + key + '.. moving on... ')
+            scream.ssay('Finished processing repo: ' + key + '.. moving on... ', current=iteration_step_count, left=diff(end_arg, begin_arg))
             #result_file.flush()
 
             #del repos[key]
