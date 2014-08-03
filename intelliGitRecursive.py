@@ -36,7 +36,7 @@ import threading
 import traceback
 import subprocess
 import requests
-from requests.auth import HTTPProxyAuth
+import httplib
 
 
 '''
@@ -124,6 +124,20 @@ def usage():
     f = open('usage.txt', 'r')
     for line in f:
         print line
+
+
+def get_status_code(host, path="/"):
+    """ This function retreives the status code of a website by requesting
+        HEAD data from the host. This means that it only requests the headers.
+        If the host cannot be reached or something else goes wrong, it returns
+        None instead.
+    """
+    try:
+        conn = httplib.HTTPConnection(host)
+        conn.request("HEAD", path)
+        return conn.getresponse().status
+    except StandardError:
+        return None
 
 
 try:
@@ -468,23 +482,27 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                             try:
                                 trying_to_get_stats += 1
                                 stats = his_repo.get_stats_contributors()
-                                for s in stats:
-                                    ad___c = 0
-                                    ad___a = 0
-                                    ad___d = 0
-                                    for w in s.weeks:
-                                        ad___c += w.c
-                                        ad___a += w.a
-                                        ad___d += w.d
-                                    if s.author.login not in his_contributors:
-                                        his_contributors.add(s.author.login)
-                                    result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
-                                                                      str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
+                                status_code__ = get_status_code('https://api.github.com/repos/' + his_repo.owner + '/' + his_repo.name + '/stats/contributors') 
+                                if status_code__ != 204:
+                                    for s in stats:
+                                        ad___c = 0
+                                        ad___a = 0
+                                        ad___d = 0
+                                        for w in s.weeks:
+                                            ad___c += w.c
+                                            ad___a += w.a
+                                            ad___d += w.d
+                                        if s.author.login not in his_contributors:
+                                            his_contributors.add(s.author.login)
+                                        result_punch_card_writer.writerow([str(his_repo.owner.login), str(his_repo.name),
+                                                                          str(developer_login), str(s.author.login), str(s.total), str(ad___c), str(ad___a), str(ad___d)])
+                                else:
+                                    scream.log_debug('The subrepo is empty, thus no statistics (punchcard) generated this time', True)
                                 break
                             except GithubException as e:
                                 freeze(str(e) + ' his_repo.get_stats_contributors(). Unexpected error with getting stats.')
                                 if ("message" in e.data) and (e.data["message"].strip() == "Repository access blocked"):
-                                    scream.log_debug("It is a private repo.. Skip!")
+                                    scream.log_debug("It is a private repo.. Skip!", True)
                                     break
                                 if force_raise:
                                     raise
