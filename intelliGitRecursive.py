@@ -35,6 +35,9 @@ import time
 import threading
 import traceback
 import subprocess
+import requests
+from requests.auth import HTTPProxyAuth
+
 
 '''
 Niezaimplementowane wymiary oraz wyjasnienie
@@ -350,8 +353,22 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
 
     while True:
         try:
-            response = urllib2.urlopen('http://osrc.dfm.io/' + str(developer_login) + '.json')
-            data = json.load(response)
+            osrc_url = 'http://osrc.dfm.io/' + str(developer_login) + '.json'
+            scream.log_debug('The osrc url is: ' + osrc_url, True)
+            # OSRC was grumpy about the urllib2 even with headers attached
+            # hdr = {'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7',
+            #        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            #        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+            #        'Accept-Encoding': 'none',
+            #        'Accept-Language': 'en-US,en;q=0.8',
+            #        'Connection': 'keep-alive'}
+            # req = urllib2.Request(osrc_url, headers=hdr) 
+            # response = urllib2.urlopen(req)
+            # thus i moved to requests library
+            proxy = {'http': '199.200.120.140:8089'}
+            session_osrc = requests.Session()
+            requests_osrc = session_osrc.get(osrc_url, proxies=proxy)
+            data = json.loads(requests_osrc.text)
             time_of_activity_per_hours = [0 for i in xrange(24)]
             for day_entry_element in data['usage']['events']:
                 for day___ in day_entry_element['day']:
@@ -371,7 +388,8 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
             # -----------------------------------------------------------------------
             scream.log_debug('Finished analyze OSRC card for user: ' + str(developer_login), True)
             break
-        except Exception:
+        except Exception as e:
+            scream.log_error(str(e), True)
             freeze('OSRC gave error, probably 404')
             scream.say('try ' + str(tries) + ' more times')
             tries -= 1
@@ -444,9 +462,11 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                         scream.ssay('Counting the subrepo pulls for the ' + str(his_repo.name))
                         total_his_pull_requests += len(list(his_repo.get_pulls()))
 
+                        trying_to_get_stats = 0
                         # lista kontrybutorow - kto ile dodal/usunal/zacomitowal w tym "pod repozytorium"
                         while True:
                             try:
+                                trying_to_get_stats += 1
                                 stats = his_repo.get_stats_contributors()
                                 for s in stats:
                                     ad___c = 0
@@ -469,6 +489,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                                 if force_raise:
                                     raise
                             except TypeError as e:
+                                scream.log_warning('This was stats attempt no: ' + str(trying_to_get_stats), True)
                                 freeze(str(e) + ' his_repo.get_stats_contributors(). Punch-card not ready?')
                                 # probably punch card not ready
                                 if force_raise:
@@ -897,7 +918,7 @@ if __name__ == "__main__":
     #         aux_stack.push(repos.get())
     #     while not aux_stack.isEmpty():
     #         repos.put(aux_stack.pop())
-    if reverse_queue:
+    if not reverse_queue:
         repos.reverse()
 
     if (begin_arg is not None) or (beginp_arg is not None):
@@ -905,6 +926,9 @@ if __name__ == "__main__":
             repos = slice_queue(repos, int(beginp_arg), int(endp_arg), True)
         else:
             slice_queue(repos, int(begin_arg), int(end_arg))
+    else:
+        begin_arg = 0
+        end_arg = len(repos)
 
     with open(result_filename__, 'ab', 0) as result_file:
         threads = []
