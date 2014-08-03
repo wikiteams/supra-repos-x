@@ -482,7 +482,7 @@ def developer_revealed(thread_getter_instance, repository, repo, contributor):
                             try:
                                 trying_to_get_stats += 1
                                 stats = his_repo.get_stats_contributors()
-                                status_code__ = get_status_code('https://api.github.com/repos/' + his_repo.owner + '/' + his_repo.name + '/stats/contributors') 
+                                status_code__ = get_status_code('https://api.github.com/repos/' + his_repo.full_name + '/stats/contributors') 
                                 if status_code__ != 204:
                                     for s in stats:
                                         ad___c = 0
